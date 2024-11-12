@@ -7,7 +7,7 @@ import (
 // UserExists Status object representing if a queried user by username or userId exists or not. This model is primarily used by the `/auth/exists` endpoint, which in turn is used during registration. Please see the documentation on that endpoint for more information on usage.
 type UserExists struct {
 	// NameOk Is the username valid?
-	NameOk bool `json:"nameOk"`
+	NameOk bool `json:"nameOk,omitempty"`
 
 	// UserExists Status if a user exist with that username or userId.
 	UserExists bool `json:"userExists"`
@@ -98,9 +98,10 @@ type PastDisplayName struct {
 type GroupId string
 
 type CurrentUserPresence struct {
-	AvatarThumbnail string    `json:"avatarThumbnail,omitempty"`
-	DisplayName     string    `json:"displayName,omitempty"`
-	Groups          []GroupId `json:"groups,omitempty"`
+	AvatarThumbnail   string    `json:"avatarThumbnail,omitempty"`
+	CurrentAvatarTags string    `json:"currentAvatarTags,omitempty"`
+	DisplayName       string    `json:"displayName,omitempty"`
+	Groups            []GroupId `json:"groups,omitempty"`
 
 	// Id A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	Id       UserId `json:"id,omitempty"`
@@ -120,6 +121,7 @@ type CurrentUserPresence struct {
 
 	// TravelingToWorld WorldID be "offline" on User profiles if you are not friends with that user.
 	TravelingToWorld WorldId `json:"travelingToWorld,omitempty"`
+	UserIcon         string  `json:"userIcon,omitempty"`
 
 	// World WorldID be "offline" on User profiles if you are not friends with that user.
 	World WorldId `json:"world,omitempty"`
@@ -158,8 +160,10 @@ type CurrentUser struct {
 	AccountDeletionLog []AccountDeletionLog `json:"accountDeletionLog,omitempty"`
 
 	// ActiveFriends
-	ActiveFriends      []UserId `json:"activeFriends,omitempty"`
-	AllowAvatarCopying bool     `json:"allowAvatarCopying"`
+	ActiveFriends         []UserId `json:"activeFriends,omitempty"`
+	AgeVerificationStatus string   `json:"ageVerificationStatus"`
+	AgeVerified           bool     `json:"ageVerified"`
+	AllowAvatarCopying    bool     `json:"allowAvatarCopying"`
 
 	// Badges
 	Badges []Badge `json:"badges,omitempty"`
@@ -206,6 +210,7 @@ type CurrentUser struct {
 
 	// Id A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	Id               UserId    `json:"id"`
+	IsAdult          bool      `json:"isAdult"`
 	IsBoopingEnabled bool      `json:"isBoopingEnabled,omitempty"`
 	IsFriend         bool      `json:"isFriend"`
 	LastActivity     time.Time `json:"last_activity,omitempty"`
@@ -227,6 +232,8 @@ type CurrentUser struct {
 	ProfilePicOverride          string              `json:"profilePicOverride"`
 	ProfilePicOverrideThumbnail string              `json:"profilePicOverrideThumbnail"`
 	Pronouns                    string              `json:"pronouns"`
+	QueuedInstance              string              `json:"queuedInstance,omitempty"`
+	ReceiveMobileInvitations    bool                `json:"receiveMobileInvitations,omitempty"`
 
 	// State * "online" User is online in VRChat
 	// * "active" User is online, but not in VRChat
@@ -292,13 +299,29 @@ const (
 
 type UnityPackageId string
 
+// PerformanceRatings Avatar Performance ratings.
+type PerformanceRatings string
+
+const (
+	PerformanceRatingsNone      PerformanceRatings = "None"
+	PerformanceRatingsExcellent PerformanceRatings = "Excellent"
+	PerformanceRatingsGood      PerformanceRatings = "Good"
+	PerformanceRatingsMedium    PerformanceRatings = "Medium"
+	PerformanceRatingsPoor      PerformanceRatings = "Poor"
+	PerformanceRatingsVeryPoor  PerformanceRatings = "VeryPoor"
+)
+
 type UnityPackage struct {
-	AssetUrl       string         `json:"assetUrl,omitempty"`
-	AssetUrlObject any            `json:"assetUrlObject,omitempty"`
-	AssetVersion   int64          `json:"assetVersion"`
-	CreatedAt      time.Time      `json:"created_at,omitempty"`
-	Id             UnityPackageId `json:"id"`
-	ImpostorUrl    string         `json:"impostorUrl,omitempty"`
+	AssetUrl            string         `json:"assetUrl,omitempty"`
+	AssetUrlObject      any            `json:"assetUrlObject,omitempty"`
+	AssetVersion        int64          `json:"assetVersion"`
+	CreatedAt           time.Time      `json:"created_at,omitempty"`
+	Id                  UnityPackageId `json:"id"`
+	ImpostorUrl         string         `json:"impostorUrl,omitempty"`
+	ImpostorizerVersion string         `json:"impostorizerVersion,omitempty"`
+
+	// PerformanceRating Avatar Performance ratings.
+	PerformanceRating PerformanceRatings `json:"performanceRating,omitempty"`
 
 	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
 	Platform        Platform `json:"platform"`
@@ -308,6 +331,7 @@ type UnityPackage struct {
 	UnitySortNumber int64    `json:"unitySortNumber,omitempty"`
 	UnityVersion    string   `json:"unityVersion"`
 	Variant         string   `json:"variant,omitempty"`
+	WorldSignature  string   `json:"worldSignature,omitempty"`
 }
 
 type Avatar struct {
@@ -328,6 +352,12 @@ type Avatar struct {
 	ImageUrl      string        `json:"imageUrl"`
 	Name          string        `json:"name"`
 	ReleaseStatus ReleaseStatus `json:"releaseStatus"`
+
+	Styles struct {
+		Primary       string   `json:"primary,omitempty"`
+		Secondary     string   `json:"secondary,omitempty"`
+		Supplementary []string `json:"supplementary,omitempty"`
+	} `json:"styles"`
 
 	// Tags
 	Tags              []Tag  `json:"tags"`
@@ -383,10 +413,10 @@ type CreateAvatarRequest struct {
 	ReleaseStatus ReleaseStatus `json:"releaseStatus,omitempty"`
 
 	// Tags
-	Tags            []Tag   `json:"tags,omitempty"`
-	UnityPackageUrl string  `json:"unityPackageUrl,omitempty"`
-	UnityVersion    string  `json:"unityVersion,omitempty"`
-	Version         float64 `json:"version,omitempty"`
+	Tags            []Tag  `json:"tags,omitempty"`
+	UnityPackageUrl string `json:"unityPackageUrl,omitempty"`
+	UnityVersion    string `json:"unityVersion,omitempty"`
+	Version         int64  `json:"version,omitempty"`
 }
 
 type UpdateAvatarRequest struct {
@@ -398,10 +428,10 @@ type UpdateAvatarRequest struct {
 	ReleaseStatus ReleaseStatus `json:"releaseStatus,omitempty"`
 
 	// Tags
-	Tags            []Tag   `json:"tags,omitempty"`
-	UnityPackageUrl string  `json:"unityPackageUrl,omitempty"`
-	UnityVersion    string  `json:"unityVersion,omitempty"`
-	Version         float64 `json:"version,omitempty"`
+	Tags            []Tag  `json:"tags,omitempty"`
+	UnityPackageUrl string `json:"unityPackageUrl,omitempty"`
+	UnityVersion    string `json:"unityVersion,omitempty"`
+	Version         int64  `json:"version,omitempty"`
 }
 
 type TransactionId string
@@ -435,7 +465,7 @@ type Subscription struct {
 	Period          SubscriptionPeriod `json:"period"`
 	PicoSku         string             `json:"picoSku,omitempty"`
 	SteamItemId     string             `json:"steamItemId"`
-	Tier            float64            `json:"tier"`
+	Tier            int64              `json:"tier"`
 }
 
 type TransactionSteamWalletInfo struct {
@@ -467,14 +497,14 @@ type TransactionAgreement struct {
 	BillingType    string  `json:"billingType"`
 	Currency       string  `json:"currency"`
 	EndDate        string  `json:"endDate"`
-	FailedAttempts float64 `json:"failedAttempts"`
-	Frequency      float64 `json:"frequency"`
-	ItemId         float64 `json:"itemId"`
+	FailedAttempts int64   `json:"failedAttempts"`
+	Frequency      int64   `json:"frequency"`
+	ItemId         int64   `json:"itemId"`
 	LastAmount     float64 `json:"lastAmount"`
 	LastAmountVat  float64 `json:"lastAmountVat"`
 	LastPayment    string  `json:"lastPayment"`
 	NextPayment    string  `json:"nextPayment"`
-	Outstanding    float64 `json:"outstanding"`
+	Outstanding    int64   `json:"outstanding"`
 	Period         string  `json:"period"`
 	RecurringAmt   float64 `json:"recurringAmt"`
 	StartDate      string  `json:"startDate"`
@@ -521,7 +551,7 @@ type UserSubscription struct {
 
 	// Store Which "Store" it came from. Right now only Stores are "Steam" and "Admin".
 	Store         string        `json:"store"`
-	Tier          float64       `json:"tier"`
+	Tier          int64         `json:"tier"`
 	TransactionId TransactionId `json:"transactionId"`
 	UpdatedAt     time.Time     `json:"updated_at"`
 }
@@ -700,10 +730,10 @@ type CreateFileRequest struct {
 }
 
 type CreateFileVersionRequest struct {
-	FileMd5              string  `json:"fileMd5,omitempty"`
-	FileSizeInBytes      float64 `json:"fileSizeInBytes,omitempty"`
-	SignatureMd5         string  `json:"signatureMd5"`
-	SignatureSizeInBytes float64 `json:"signatureSizeInBytes"`
+	FileMd5              string `json:"fileMd5,omitempty"`
+	FileSizeInBytes      int64  `json:"fileSizeInBytes,omitempty"`
+	SignatureMd5         string `json:"signatureMd5"`
+	SignatureSizeInBytes int64  `json:"signatureSizeInBytes"`
 }
 
 type FinishFileDataUploadRequest struct {
@@ -723,12 +753,12 @@ type FileUploadUrl struct {
 
 type FileVersionUploadStatus struct {
 	// Etags Unknown
-	Etags          []any   `json:"etags"`
-	FileName       string  `json:"fileName"`
-	MaxParts       float64 `json:"maxParts"`
-	NextPartNumber float64 `json:"nextPartNumber"`
-	Parts          []any   `json:"parts"`
-	UploadId       string  `json:"uploadId"`
+	Etags          []any  `json:"etags"`
+	FileName       string `json:"fileName"`
+	MaxParts       int64  `json:"maxParts"`
+	NextPartNumber int64  `json:"nextPartNumber"`
+	Parts          []any  `json:"parts"`
+	UploadId       string `json:"uploadId"`
 }
 
 type LimitedUser struct {
@@ -756,8 +786,9 @@ type LimitedUser struct {
 	FriendKey      string        `json:"friendKey,omitempty"`
 
 	// Id A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	Id       UserId `json:"id"`
-	IsFriend bool   `json:"isFriend"`
+	Id        UserId    `json:"id"`
+	IsFriend  bool      `json:"isFriend"`
+	LastLogin time.Time `json:"last_login,omitempty"`
 
 	// LastPlatform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
 	LastPlatform       Platform `json:"last_platform"`
@@ -928,10 +959,8 @@ type CreateGroupRequest struct {
 type GroupMemberId string
 
 type GroupMyMember struct {
-	AcceptedByDisplayName string `json:"acceptedByDisplayName,omitempty"`
-
-	// AcceptedById A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	AcceptedById                UserId        `json:"acceptedById,omitempty"`
+	AcceptedByDisplayName       string        `json:"acceptedByDisplayName,omitempty"`
+	AcceptedById                string        `json:"acceptedById,omitempty"`
 	BannedAt                    string        `json:"bannedAt,omitempty"`
 	CreatedAt                   time.Time     `json:"createdAt,omitempty"`
 	GroupId                     GroupId       `json:"groupId,omitempty"`
@@ -969,6 +998,7 @@ type GroupRole struct {
 }
 
 type Group struct {
+	Badges              []string           `json:"badges,omitempty"`
 	BannerId            string             `json:"bannerId,omitempty"`
 	BannerUrl           string             `json:"bannerUrl,omitempty"`
 	CreatedAt           time.Time          `json:"createdAt,omitempty"`
@@ -1099,6 +1129,9 @@ type GroupMemberLimitedUser struct {
 }
 
 type GroupMember struct {
+	AcceptedByDisplayName string `json:"acceptedByDisplayName,omitempty"`
+	AcceptedById          string `json:"acceptedById,omitempty"`
+
 	// BannedAt Only visible via the /groups/:groupId/members endpoint, **not** when fetching a specific user.
 	BannedAt time.Time `json:"bannedAt,omitempty"`
 
@@ -1252,6 +1285,7 @@ type World struct {
 	// UnityPackages Empty if unauthenticated.
 	UnityPackages []UnityPackage `json:"unityPackages,omitempty"`
 	UpdatedAt     time.Time      `json:"updated_at"`
+	UrlList       []string       `json:"urlList,omitempty"`
 	Version       int64          `json:"version"`
 	Visits        int64          `json:"visits"`
 }
@@ -1544,6 +1578,7 @@ const (
 	RegionUs      Region = "us"
 	RegionUse     Region = "use"
 	RegionUsw     Region = "usw"
+	RegionUsx     Region = "usx"
 	RegionEu      Region = "eu"
 	RegionJp      Region = "jp"
 	RegionUnknown Region = "unknown"
@@ -1551,6 +1586,7 @@ const (
 
 type InstancePlatforms struct {
 	Android           int64 `json:"android"`
+	Ios               int64 `json:"ios,omitempty"`
 	Standalonewindows int64 `json:"standalonewindows"`
 }
 
@@ -1558,17 +1594,20 @@ type InstancePlatforms struct {
 // * `friends` field is only present if InstanceType is `friends` aka "Friends", and is instance creator.
 // * `private` field is only present if InstanceType is `private` aka "Invite" or "Invite+", and is instance creator.
 type Instance struct {
-	Active           bool  `json:"active"`
-	CanRequestInvite bool  `json:"canRequestInvite"`
-	Capacity         int64 `json:"capacity"`
+	Active           bool   `json:"active"`
+	AgeGate          string `json:"ageGate,omitempty"`
+	CanRequestInvite bool   `json:"canRequestInvite"`
+	Capacity         int64  `json:"capacity"`
 
 	// ClientNumber Always returns "unknown".
 	ClientNumber string    `json:"clientNumber"`
 	ClosedAt     time.Time `json:"closedAt,omitempty"`
+	DisplayName  string    `json:"displayName"`
 
 	// Friends A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	Friends UserId `json:"friends,omitempty"`
-	Full    bool   `json:"full"`
+	Friends           UserId `json:"friends,omitempty"`
+	Full              bool   `json:"full"`
+	GameServerVersion int64  `json:"gameServerVersion"`
 
 	// GroupAccessType Group access type when the instance type is "group"
 	GroupAccessType   GroupAccessType `json:"groupAccessType,omitempty"`
@@ -1579,8 +1618,9 @@ type Instance struct {
 	Hidden UserId `json:"hidden,omitempty"`
 
 	// Id InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
-	Id         InstanceId `json:"id"`
-	InstanceId string     `json:"instanceId"`
+	Id                         InstanceId `json:"id"`
+	InstanceId                 string     `json:"instanceId"`
+	InstancePersistenceEnabled string     `json:"instancePersistenceEnabled"`
 
 	// Location InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
 	Location InstanceId `json:"location"`
@@ -1593,8 +1633,9 @@ type Instance struct {
 	Permanent bool            `json:"permanent"`
 
 	// PhotonRegion API/Photon region.
-	PhotonRegion Region            `json:"photonRegion"`
-	Platforms    InstancePlatforms `json:"platforms"`
+	PhotonRegion             Region            `json:"photonRegion"`
+	Platforms                InstancePlatforms `json:"platforms"`
+	PlayerPersistenceEnabled bool              `json:"playerPersistenceEnabled"`
 
 	// Private A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	Private             UserId `json:"private,omitempty"`
@@ -1631,12 +1672,15 @@ type PermissionId string
 
 type Permission struct {
 	Data             any          `json:"data,omitempty"`
+	Description      string       `json:"description,omitempty"`
+	DisplayName      string       `json:"displayName,omitempty"`
 	Id               PermissionId `json:"id"`
 	Name             string       `json:"name"`
 	OwnerDisplayName string       `json:"ownerDisplayName"`
 
 	// OwnerId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	OwnerId UserId `json:"ownerId"`
+	Type    string `json:"type,omitempty"`
 }
 
 type PlayerModerationId string
@@ -1679,6 +1723,96 @@ type ApiConfigAnnouncement struct {
 
 	// Text Announcement text
 	Text string `json:"text"`
+}
+
+// PerformanceLimiterInfo Info about the performance limits on a platform
+type PerformanceLimiterInfo struct {
+	Allowed bool `json:"allowed"`
+
+	// MaxSeats Maximum amount of seats. -1 means no limit.
+	MaxSeats int64 `json:"maxSeats"`
+}
+
+// ApiConfigConstants Constants
+type ApiConfigConstants struct {
+	// Groups Group-related constants
+
+	Groups struct {
+		// Capacity Maximum group capacity
+		Capacity int64 `json:"CAPACITY,omitempty"`
+
+		// GroupTransferRequirements Requirements for transferring group ownership
+		GroupTransferRequirements []string `json:"GROUP_TRANSFER_REQUIREMENTS,omitempty"`
+
+		// MaxInvitesRequests Maximum number of invite requests
+		MaxInvitesRequests int64 `json:"MAX_INVITES_REQUESTS,omitempty"`
+
+		// MaxJoined Maximum number of joined groups
+		MaxJoined int64 `json:"MAX_JOINED,omitempty"`
+
+		// MaxJoinedPlus Maximum number of joined groups for VRChat Plus members
+		MaxJoinedPlus int64 `json:"MAX_JOINED_PLUS,omitempty"`
+
+		// MaxLanguages Maximum number of supported languages
+		MaxLanguages int64 `json:"MAX_LANGUAGES,omitempty"`
+
+		// MaxLinks Maximum number of group links
+		MaxLinks int64 `json:"MAX_LINKS,omitempty"`
+
+		// MaxManagementRoles Maximum number of management roles in a group
+		MaxManagementRoles int64 `json:"MAX_MANAGEMENT_ROLES,omitempty"`
+
+		// MaxOwned Maximum number of groups a user can own
+		MaxOwned int64 `json:"MAX_OWNED,omitempty"`
+
+		// MaxRoles Maximum number of roles in a group
+		MaxRoles int64 `json:"MAX_ROLES,omitempty"`
+	} `json:"GROUPS"`
+
+	// Instance Instance-related constants
+
+	Instance struct {
+		// PopulationBrackets Population brackets based on instance population
+
+		PopulationBrackets struct {
+			// Crowded Crowded population range
+
+			Crowded struct {
+				// Max Maximum population for a crowded instance
+				Max int64 `json:"max,omitempty"`
+
+				// Min Minimum population for a crowded instance
+				Min int64 `json:"min,omitempty"`
+			} `json:"CROWDED,omitempty"`
+
+			// Few Few population range
+
+			Few struct {
+				// Max Maximum population for a few instance
+				Max int64 `json:"max,omitempty"`
+
+				// Min Minimum population for a few instance
+				Min int64 `json:"min,omitempty"`
+			} `json:"FEW,omitempty"`
+
+			// Many Many population range
+
+			Many struct {
+				// Max Maximum population for a many instance
+				Max int64 `json:"max,omitempty"`
+
+				// Min Minimum population for a many instance
+				Min int64 `json:"min,omitempty"`
+			} `json:"MANY,omitempty"`
+		} `json:"POPULATION_BRACKETS,omitempty"`
+	} `json:"INSTANCE"`
+
+	// Language Language-related constants
+
+	Language struct {
+		// SpokenLanguageOptions Supported spoken language options
+		SpokenLanguageOptions any `json:"SPOKEN_LANGUAGE_OPTIONS,omitempty"`
+	} `json:"LANGUAGE"`
 }
 
 // DeploymentGroup Used to identify which API deployment cluster is currently responding.
@@ -1763,9 +1897,44 @@ type ApiConfigEvents struct {
 	ViewSegmentLength int64 `json:"viewSegmentLength"`
 }
 
+// PlatformBuildInfo Build information for a platform
+type PlatformBuildInfo struct {
+	// MinBuildNumber Minimum build number required for the platform
+	MinBuildNumber int64 `json:"minBuildNumber"`
+
+	// RedirectionAddress Redirection URL for updating the app
+	RedirectionAddress string `json:"redirectionAddress"`
+}
+
+// ReportCategory A category used for reporting content
+type ReportCategory struct {
+	// Text The label of the report category
+	Text string `json:"text"`
+
+	// Tooltip The tooltip that describes the category
+	Tooltip string `json:"tooltip"`
+}
+
+// ReportReason A reason used for reporting users
+type ReportReason struct {
+	// Text The label or name of the report reason
+	Text string `json:"text"`
+
+	// Tooltip A brief explanation of what this reason entails
+	Tooltip string `json:"tooltip"`
+}
+
 type ApiConfig struct {
 	// Address VRChat's office address
-	Address string `json:"address"`
+	Address                      string `json:"address"`
+	AgeVerificationP             bool   `json:"ageVerificationP"`
+	AgeVerificationStatusVisible bool   `json:"ageVerificationStatusVisible"`
+
+	// AnalyticsSegmentNewUiPctOfUsers Unknown
+	AnalyticsSegmentNewUiPctOfUsers int64 `json:"analyticsSegment_NewUI_PctOfUsers"`
+
+	// AnalyticsSegmentNewUiSalt Unknown
+	AnalyticsSegmentNewUiSalt string `json:"analyticsSegment_NewUI_Salt"`
 
 	// Announcements Public Announcements
 	Announcements []ApiConfigAnnouncement `json:"announcements"`
@@ -1779,8 +1948,31 @@ type ApiConfig struct {
 	// AvailableLanguages List of supported Languages
 	AvailableLanguages []string `json:"availableLanguages"`
 
+	AvatarPerfLimiter struct {
+		// AndroidMobile Info about the performance limits on a platform
+		AndroidMobile PerformanceLimiterInfo `json:"AndroidMobile"`
+
+		// IOsMobile Info about the performance limits on a platform
+		IOsMobile PerformanceLimiterInfo `json:"iOSMobile"`
+
+		// Pc Info about the performance limits on a platform
+		Pc PerformanceLimiterInfo `json:"PC"`
+
+		// Pico Info about the performance limits on a platform
+		Pico PerformanceLimiterInfo `json:"Pico"`
+
+		// Quest Info about the performance limits on a platform
+		Quest PerformanceLimiterInfo `json:"Quest"`
+
+		// XrElite Info about the performance limits on a platform
+		XrElite PerformanceLimiterInfo `json:"XRElite"`
+	} `json:"avatarPerfLimiter"`
+
 	// BuildVersionTag Build tag of the API server
 	BuildVersionTag string `json:"buildVersionTag"`
+
+	// ChatboxLogBufferSeconds Unknown
+	ChatboxLogBufferSeconds int64 `json:"chatboxLogBufferSeconds"`
 
 	// ClientApiKey apiKey to be used for all other requests
 	ClientApiKey string `json:"clientApiKey"`
@@ -1793,6 +1985,9 @@ type ApiConfig struct {
 
 	// ClientNetDispatchThread Unknown
 	ClientNetDispatchThread bool `json:"clientNetDispatchThread,omitempty"`
+
+	// ClientNetDispatchThreadMobile Unknown
+	ClientNetDispatchThreadMobile bool `json:"clientNetDispatchThreadMobile"`
 
 	// ClientNetInThread Unknown
 	ClientNetInThread bool `json:"clientNetInThread,omitempty"`
@@ -1827,6 +2022,9 @@ type ApiConfig struct {
 	// ClientSentCountAllowance Unknown
 	ClientSentCountAllowance int64 `json:"clientSentCountAllowance"`
 
+	// Constants Constants
+	Constants ApiConfigConstants `json:"constants"`
+
 	// ContactEmail VRChat's contact email
 	ContactEmail string `json:"contactEmail"`
 
@@ -1839,6 +2037,7 @@ type ApiConfig struct {
 	// CurrentTosVersion Current version number of the Terms of Service
 	CurrentTosVersion int64    `json:"currentTOSVersion"`
 	DefaultAvatar     AvatarId `json:"defaultAvatar"`
+	DefaultStickerSet string   `json:"defaultStickerSet"`
 
 	// DeploymentGroup Used to identify which API deployment cluster is currently responding.
 	//
@@ -1930,6 +2129,12 @@ type ApiConfig struct {
 	EconomyState int64           `json:"economyState,omitempty"`
 	Events       ApiConfigEvents `json:"events"`
 
+	// ForceUseLatestWorld Unknown
+	ForceUseLatestWorld bool `json:"forceUseLatestWorld"`
+
+	// GoogleApiClientId Unknown
+	GoogleApiClientId string `json:"googleApiClientId"`
+
 	// HomeWorldId WorldID be "offline" on User profiles if you are not friends with that user.
 	HomeWorldId WorldId `json:"homeWorldId"`
 
@@ -1945,17 +2150,180 @@ type ApiConfig struct {
 	// JobsEmail VRChat's job application email
 	JobsEmail string `json:"jobsEmail"`
 
+	// MinSupportedClientBuildNumber Minimum supported client build number for various platforms
+
+	MinSupportedClientBuildNumber struct {
+		// AppStore Build information for a platform
+		AppStore PlatformBuildInfo `json:"AppStore"`
+
+		// Default Build information for a platform
+		Default PlatformBuildInfo `json:"Default"`
+
+		// Firebase Build information for a platform
+		Firebase PlatformBuildInfo `json:"Firebase"`
+
+		// FirebaseiOs Build information for a platform
+		FirebaseiOs PlatformBuildInfo `json:"FirebaseiOS"`
+
+		// GooglePlay Build information for a platform
+		GooglePlay PlatformBuildInfo `json:"GooglePlay"`
+
+		// Pc Build information for a platform
+		Pc PlatformBuildInfo `json:"PC"`
+
+		// PicoStore Build information for a platform
+		PicoStore PlatformBuildInfo `json:"PicoStore"`
+
+		// QuestAppLab Build information for a platform
+		QuestAppLab PlatformBuildInfo `json:"QuestAppLab"`
+
+		// QuestStore Build information for a platform
+		QuestStore PlatformBuildInfo `json:"QuestStore"`
+
+		// TestFlight Build information for a platform
+		TestFlight PlatformBuildInfo `json:"TestFlight"`
+
+		// XrElite Build information for a platform
+		XrElite PlatformBuildInfo `json:"XRElite"`
+	} `json:"minSupportedClientBuildNumber"`
+
+	// MinimumUnityVersionForUploads Minimum Unity version required for uploading assets
+	MinimumUnityVersionForUploads string `json:"minimumUnityVersionForUploads"`
+
 	// ModerationEmail VRChat's moderation related email
 	ModerationEmail string `json:"moderationEmail"`
 
 	// NotAllowedToSelectAvatarInPrivateWorldMessage Used in-game to notify a user they aren't allowed to select avatars in private worlds
 	NotAllowedToSelectAvatarInPrivateWorldMessage string `json:"notAllowedToSelectAvatarInPrivateWorldMessage"`
 
+	// OfflineAnalysis Whether to allow offline analysis
+
+	OfflineAnalysis struct {
+		// Android Whether to allow offline analysis
+		Android bool `json:"android,omitempty"`
+
+		// Standalonewindows Whether to allow offline analysis
+		Standalonewindows bool `json:"standalonewindows,omitempty"`
+	} `json:"offlineAnalysis"`
+
+	// PhotonNameserverOverrides Unknown
+	PhotonNameserverOverrides []string `json:"photonNameserverOverrides"`
+
+	// PhotonPublicKeys Unknown
+	PhotonPublicKeys []string `json:"photonPublicKeys"`
+
 	// PlayerUrlResolverSha1 Currently used youtube-dl.exe hash in SHA1-delimited format
 	PlayerUrlResolverSha1 string `json:"player-url-resolver-sha1"`
 
 	// PlayerUrlResolverVersion Currently used youtube-dl.exe version
 	PlayerUrlResolverVersion string `json:"player-url-resolver-version"`
+
+	// ReportCategories Categories available for reporting objectionable content
+
+	ReportCategories struct {
+		// Avatar A category used for reporting content
+		Avatar ReportCategory `json:"avatar"`
+
+		// Behavior A category used for reporting content
+		Behavior ReportCategory `json:"behavior"`
+
+		// Chat A category used for reporting content
+		Chat ReportCategory `json:"chat"`
+
+		// Emoji A category used for reporting content
+		Emoji ReportCategory `json:"emoji,omitempty"`
+
+		// Environment A category used for reporting content
+		Environment ReportCategory `json:"environment"`
+
+		// Groupstore A category used for reporting content
+		Groupstore ReportCategory `json:"groupstore"`
+
+		// Image A category used for reporting content
+		Image ReportCategory `json:"image"`
+
+		// Sticker A category used for reporting content
+		Sticker ReportCategory `json:"sticker,omitempty"`
+
+		// Text A category used for reporting content
+		Text ReportCategory `json:"text"`
+
+		// Warnings A category used for reporting content
+		Warnings ReportCategory `json:"warnings"`
+
+		// Worldimage A category used for reporting content
+		Worldimage ReportCategory `json:"worldimage"`
+
+		// Worldstore A category used for reporting content
+		Worldstore ReportCategory `json:"worldstore"`
+	} `json:"reportCategories"`
+
+	// ReportFormUrl URL to the report form
+	ReportFormUrl string `json:"reportFormUrl"`
+
+	// ReportOptions Options for reporting content
+	ReportOptions any `json:"reportOptions"`
+
+	// ReportReasons Reasons available for reporting users
+
+	ReportReasons struct {
+		// Billing A reason used for reporting users
+		Billing ReportReason `json:"billing"`
+
+		// Botting A reason used for reporting users
+		Botting ReportReason `json:"botting"`
+
+		// Cancellation A reason used for reporting users
+		Cancellation ReportReason `json:"cancellation"`
+
+		// Gore A reason used for reporting users
+		Gore ReportReason `json:"gore"`
+
+		// Hacking A reason used for reporting users
+		Hacking ReportReason `json:"hacking"`
+
+		// Harassing A reason used for reporting users
+		Harassing ReportReason `json:"harassing"`
+
+		// Hateful A reason used for reporting users
+		Hateful ReportReason `json:"hateful"`
+
+		// Impersonation A reason used for reporting users
+		Impersonation ReportReason `json:"impersonation"`
+
+		// Inappropriate A reason used for reporting users
+		Inappropriate ReportReason `json:"inappropriate"`
+
+		// Leaking A reason used for reporting users
+		Leaking ReportReason `json:"leaking"`
+
+		// Malicious A reason used for reporting users
+		Malicious ReportReason `json:"malicious"`
+
+		// Missing A reason used for reporting users
+		Missing ReportReason `json:"missing"`
+
+		// Nudity A reason used for reporting users
+		Nudity ReportReason `json:"nudity"`
+
+		// Renewal A reason used for reporting users
+		Renewal ReportReason `json:"renewal"`
+
+		// Security A reason used for reporting users
+		Security ReportReason `json:"security"`
+
+		// Service A reason used for reporting users
+		Service ReportReason `json:"service"`
+
+		// Sexual A reason used for reporting users
+		Sexual ReportReason `json:"sexual"`
+
+		// Threatening A reason used for reporting users
+		Threatening ReportReason `json:"threatening"`
+
+		// Visuals A reason used for reporting users
+		Visuals ReportReason `json:"visuals"`
+	} `json:"reportReasons"`
 
 	// SdkDeveloperFaqUrl Link to the developer FAQ
 	SdkDeveloperFaqUrl string `json:"sdkDeveloperFaqUrl"`
@@ -1978,8 +2346,14 @@ type ApiConfig struct {
 	// SupportEmail VRChat's support email
 	SupportEmail string `json:"supportEmail"`
 
+	// SupportFormUrl VRChat's support form
+	SupportFormUrl string `json:"supportFormUrl"`
+
 	// TimeOutWorldId WorldID be "offline" on User profiles if you are not friends with that user.
 	TimeOutWorldId WorldId `json:"timeOutWorldId"`
+
+	// Timekeeping Unknown
+	Timekeeping bool `json:"timekeeping"`
 
 	// TutorialWorldId WorldID be "offline" on User profiles if you are not friends with that user.
 	TutorialWorldId WorldId `json:"tutorialWorldId"`
@@ -2013,6 +2387,15 @@ type ApiConfig struct {
 
 	// VoiceEnableReceiverLimiting Unknown, probably voice optimization testing
 	VoiceEnableReceiverLimiting bool `json:"VoiceEnableReceiverLimiting"`
+
+	// WebsocketMaxFriendsRefreshDelay Unknown
+	WebsocketMaxFriendsRefreshDelay int64 `json:"websocketMaxFriendsRefreshDelay"`
+
+	// WebsocketQuickReconnectTime Unknown
+	WebsocketQuickReconnectTime int64 `json:"websocketQuickReconnectTime"`
+
+	// WebsocketReconnectMaxDelay Unknown
+	WebsocketReconnectMaxDelay int64 `json:"websocketReconnectMaxDelay"`
 
 	// WhiteListedAssetUrls List of allowed URLs that are allowed to host avatar assets
 	WhiteListedAssetUrls []string `json:"whiteListedAssetUrls"`
@@ -2070,8 +2453,45 @@ type ApiHealth struct {
 	ServerName      string `json:"serverName"`
 }
 
+type Jam struct {
+	Description string `json:"description"`
+	Id          string `json:"id"`
+	IsVisible   bool   `json:"isVisible"`
+	MoreInfo    string `json:"moreInfo"`
+
+	// State One of:
+	// - submissions_open
+	// - closed
+	State string `json:"state"`
+
+	StateChangeDates struct {
+		Closed            time.Time `json:"closed,omitempty"`
+		SubmissionsClosed time.Time `json:"submissionsClosed,omitempty"`
+		SubmissionsOpened time.Time `json:"submissionsOpened,omitempty"`
+		WinnersSelected   time.Time `json:"winnersSelected,omitempty"`
+	} `json:"stateChangeDates"`
+	SubmissionContentGateDate time.Time `json:"submissionContentGateDate"`
+	SubmissionContentGated    bool      `json:"submissionContentGated"`
+	Title                     string    `json:"title"`
+	UpdatedAt                 time.Time `json:"updated_at"`
+}
+
+type Submission struct {
+	// ContentId Either world ID or avatar ID
+	ContentId   string    `json:"contentId"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description string    `json:"description"`
+	Id          string    `json:"id"`
+	JamId       string    `json:"jamId"`
+	RatingScore int64     `json:"ratingScore,omitempty"`
+
+	// SubmitterId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	SubmitterId UserId `json:"submitterId"`
+}
+
 type User struct {
-	AllowAvatarCopying bool `json:"allowAvatarCopying"`
+	AgeVerificationStatus string `json:"ageVerificationStatus"`
+	AllowAvatarCopying    bool   `json:"allowAvatarCopying"`
 
 	// Badges
 	Badges   []Badge  `json:"badges,omitempty"`
@@ -2112,7 +2532,8 @@ type User struct {
 	LastActivity string `json:"last_activity"`
 
 	// LastLogin Either a date-time or empty string.
-	LastLogin string `json:"last_login"`
+	LastLogin  string `json:"last_login"`
+	LastMobile string `json:"last_mobile,omitempty"`
 
 	// LastPlatform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
 	LastPlatform Platform `json:"last_platform"`
@@ -2120,7 +2541,7 @@ type User struct {
 	// Location WorldID be "offline" on User profiles if you are not friends with that user.
 	Location                    WorldId `json:"location,omitempty"`
 	Note                        string  `json:"note,omitempty"`
-	Platform                    string  `json:"platform"`
+	Platform                    string  `json:"platform,omitempty"`
 	ProfilePicOverride          string  `json:"profilePicOverride"`
 	ProfilePicOverrideThumbnail string  `json:"profilePicOverrideThumbnail"`
 	Pronouns                    string  `json:"pronouns"`
@@ -2152,7 +2573,7 @@ type User struct {
 }
 
 type UpdateUserRequest struct {
-	AcceptedTosVersion float64  `json:"acceptedTOSVersion,omitempty"`
+	AcceptedTosVersion int64    `json:"acceptedTOSVersion,omitempty"`
 	Bio                string   `json:"bio,omitempty"`
 	BioLinks           []string `json:"bioLinks,omitempty"`
 	Birthday           string   `json:"birthday,omitempty"`
@@ -2277,6 +2698,45 @@ type CreateWorldRequest struct {
 	UnityVersion    string `json:"unityVersion,omitempty"`
 }
 
+type FavoritedWorld struct {
+	// AuthorId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	AuthorId      UserId     `json:"authorId"`
+	AuthorName    string     `json:"authorName"`
+	Capacity      int64      `json:"capacity"`
+	CreatedAt     time.Time  `json:"created_at"`
+	Description   string     `json:"description"`
+	FavoriteGroup string     `json:"favoriteGroup"`
+	FavoriteId    FavoriteId `json:"favoriteId"`
+	Favorites     int64      `json:"favorites"`
+	Featured      bool       `json:"featured"`
+	Heat          int64      `json:"heat"`
+
+	// Id WorldID be "offline" on User profiles if you are not friends with that user.
+	Id                  WorldId       `json:"id"`
+	ImageUrl            string        `json:"imageUrl"`
+	LabsPublicationDate string        `json:"labsPublicationDate"`
+	Name                string        `json:"name"`
+	Occupants           int64         `json:"occupants"`
+	Organization        string        `json:"organization"`
+	Popularity          int64         `json:"popularity"`
+	PreviewYoutubeId    string        `json:"previewYoutubeId,omitempty"`
+	PublicationDate     string        `json:"publicationDate"`
+	RecommendedCapacity int64         `json:"recommendedCapacity,omitempty"`
+	ReleaseStatus       ReleaseStatus `json:"releaseStatus"`
+
+	// Tags
+	Tags              []Tag           `json:"tags"`
+	ThumbnailImageUrl string          `json:"thumbnailImageUrl"`
+	UdonProducts      []UdonProductId `json:"udonProducts,omitempty"`
+
+	// UnityPackages
+	UnityPackages []UnityPackage `json:"unityPackages"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	UrlList       []string       `json:"urlList"`
+	Version       int64          `json:"version"`
+	Visits        int64          `json:"visits,omitempty"`
+}
+
 type UpdateWorldRequest struct {
 	AssetUrl     string `json:"assetUrl,omitempty"`
 	AssetVersion string `json:"assetVersion,omitempty"`
@@ -2387,8 +2847,6 @@ type TransactionResponse Transaction
 type UserSubscriptionListResponse []UserSubscription
 
 type SubscriptionListResponse []Subscription
-
-type LicenseGroupListResponse []LicenseGroup
 
 type LicenseGroupResponse LicenseGroup
 
@@ -2545,9 +3003,9 @@ type InstanceResponse Instance
 
 type InstanceCloseForbiddenError Error
 
-type InstanceSelfInviteSuccess Success
-
 type NotificationListResponse []Notification
+
+type NotificationNotFoundError Error
 
 type FriendSuccess Success
 
@@ -2567,12 +3025,6 @@ type PlayerModerationResponse PlayerModeration
 
 type PlayerModerationClearAllSuccess Success
 
-type PlayerModerationNotFoundError Error
-
-type PlayerModerationRemovedSuccess Success
-
-type PlayerModerationDeleteOthersError Error
-
 type PlayerModerationUnmoderatedSuccess Success
 
 type ApiConfigResponse ApiConfig
@@ -2589,6 +3041,14 @@ type CurrentOnlineUsersResponse int64
 // SystemTimeResponse Does not return millisecond precision. Always returns time in UTC.
 type SystemTimeResponse time.Time
 
+type JamListResponse []Jam
+
+type JamResponse Jam
+
+type JamNotFoundError Error
+
+type SubmissionListResponse []Submission
+
 type UserResponse User
 
 type LimitedUserGroupListResponse []LimitedUserGroups
@@ -2600,6 +3060,8 @@ type LimitedWorldListResponse []LimitedWorld
 type WorldResponse World
 
 type WorldCreateNotAllowedYetError Error
+
+type FavoritedWorldListResponse []FavoritedWorld
 
 type WorldSeeOtherUserFavoritesError Error
 

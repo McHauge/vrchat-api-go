@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: VRChat API Documentation
-  version: 1.18.1
+  version: 1.18.8
   contact:
     name: Unofficial VRChat API Documentation Project
     url: https://github.com/VRChatAPI
@@ -92,7 +92,7 @@ info:
 
     [![Discord](https://img.shields.io/static/v1?label=vrchatapi&message=discord&color=blueviolet&style=for-the-badge)](https://discord.gg/qjZE9C9fkB)
 servers:
-  - url: https://vrchat.com/api/1
+  - url: https://api.vrchat.cloud/api/1
 tags:
   - name: authentication
     description: Authentication Docs Here
@@ -112,6 +112,8 @@ tags:
     description: Invite Docs Here
   - name: instances
     description: Instances Docs Here
+  - name: jams
+    description: Jams Docs Here
   - name: notifications
     description: Notifiations Docs
   - name: permissions
@@ -1404,7 +1406,7 @@ paths:
         - authCookie: []
     post:
       summary: Create Group Announcement
-      description: Creates an Announcement for a Group.
+      description: 'Creates an Announcement for a Group. Warning: This will also remove all announcements. To make proper announcements, use the posts endpoint instead'
       operationId: createGroupAnnouncement
       tags:
         - groups
@@ -1798,6 +1800,7 @@ paths:
         - $ref: '#/components/parameters/number'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/groupMemberSort'
+        - $ref: '#/components/parameters/groupMemberRoleFilter'
       responses:
         '200':
           $ref: '#/components/responses/GroupMemberListResponse'
@@ -2514,28 +2517,6 @@ paths:
           $ref: '#/components/responses/InstanceShortNameResponse'
         '401':
           $ref: '#/components/responses/MissingCredentialsError'
-  /instances/{worldId}:{instanceId}/invite:
-    parameters:
-      - $ref: '#/components/parameters/worldId'
-      - $ref: '#/components/parameters/instanceId'
-    post:
-      summary: Send Self Invite
-      tags:
-        - instances
-      operationId: sendSelfInvite
-      security:
-        - authCookie: []
-      description: Sends an invite to the instance to yourself.
-      x-codeSamples:
-        - lang: cURL
-          source: |-
-            curl -X POST "https://vrchat.com/api/1/instances/{worldId}:{instanceId}/invite" \
-                 -b "auth={authCookie}"
-      responses:
-        '200':
-          $ref: '#/components/responses/InstanceSelfInviteSuccess'
-        '401':
-          $ref: '#/components/responses/MissingCredentialsError'
   /instances/s/{shortName}:
     parameters:
       - schema:
@@ -2610,6 +2591,29 @@ paths:
           description: Only return notifications sent after this Date. Ignored if type is `friendRequest`.
         - $ref: '#/components/parameters/number'
         - $ref: '#/components/parameters/offset'
+  /auth/user/notifications/{notificationId}:
+    parameters:
+      - $ref: '#/components/parameters/notificationId'
+    get:
+      summary: Show notification
+      operationId: getNotification
+      tags:
+        - notifications
+      x-codeSamples:
+        - lang: cURL
+          source: |-
+            curl -X GET "https://vrchat.com/api/1/auth/user/notifications/{notificationId}" \
+                 -b "auth={authCookie}"
+      responses:
+        '200':
+          $ref: '#/components/responses/NotificationResponse'
+        '401':
+          $ref: '#/components/responses/MissingCredentialsError'
+        '404':
+          $ref: '#/components/responses/NotificationNotFoundError'
+      security:
+        - authCookie: []
+      description: Get a notification by notification `not_` ID.
   /auth/user/notifications/{notificationId}/accept:
     parameters:
       - $ref: '#/components/parameters/notificationId'
@@ -2816,54 +2820,6 @@ paths:
       description: ⚠️ **This will delete every single player moderation you've ever made.**
       tags:
         - playermoderation
-  /auth/user/playermoderations/{playerModerationId}:
-    parameters:
-      - schema:
-          type: string
-        name: playerModerationId
-        in: path
-        required: true
-        description: Must be a valid `pmod_` ID.
-    get:
-      summary: Get Player Moderation
-      tags:
-        - playermoderation
-      x-codeSamples:
-        - lang: cURL
-          source: |-
-            curl -X GET "https://vrchat.com/api/1/auth/user/playermoderations/{playerModerationId}" \
-                 -b "auth={authCookie}"
-      responses:
-        '200':
-          $ref: '#/components/responses/PlayerModerationResponse'
-        '401':
-          $ref: '#/components/responses/MissingCredentialsError'
-        '404':
-          $ref: '#/components/responses/PlayerModerationNotFoundError'
-      operationId: getPlayerModeration
-      security:
-        - authCookie: []
-      description: Returns a single Player Moderation. This returns the exact same amount of information as the more generalised `getPlayerModerations`.
-    delete:
-      summary: Delete Player Moderation
-      operationId: deletePlayerModeration
-      security:
-        - authCookie: []
-      x-codeSamples:
-        - lang: cURL
-          source: |-
-            curl -X DELETE "https://vrchat.com/api/1/auth/user/playermoderations/{playerModerationId}" \
-                 -b "auth={authCookie}"
-      responses:
-        '200':
-          $ref: '#/components/responses/PlayerModerationRemovedSuccess'
-        '401':
-          $ref: '#/components/responses/MissingCredentialsError'
-        '403':
-          $ref: '#/components/responses/PlayerModerationDeleteOthersError'
-      description: Deletes a specific player moderation based on it's `pmod_` ID. The website uses `unmoderateUser` instead. You can delete the same player moderation multiple times successfully.
-      tags:
-        - playermoderation
   /auth/user/unplayermoderate:
     put:
       summary: Unmoderate User
@@ -3028,6 +2984,72 @@ paths:
 
         **NOTE:** The response type is not a JSON object, but a simple JSON string.
       security: []
+  /jams:
+    get:
+      summary: Show jams list
+      tags:
+        - jams
+      x-codeSamples:
+        - lang: cURL
+          source: curl -X GET "https://vrchat.com/api/1/jams?type={string}"
+      responses:
+        '200':
+          $ref: '#/components/responses/JamListResponse'
+      security:
+        - authCookie: []
+      operationId: getJams
+      description: |-
+        Lists World Jams or Avatar Jams, both currently running and ones that have ended.
+
+        `isActive` is used to select only active or already ended jams.
+
+        `type` is used to select only world or avatar jams, and can only take `world` or `avatar`.
+        ``
+      parameters:
+        - schema:
+            type: string
+            example: avatar
+          in: query
+          name: type
+          description: Only show jams of this type (`avatar` or `world`).
+  /jams/{jamId}:
+    parameters:
+      - $ref: '#/components/parameters/jamId'
+    get:
+      summary: Show jam information
+      tags:
+        - jams
+      x-codeSamples:
+        - lang: cURL
+          source: curl -X GET "https://vrchat.com/api/1/jams/{jamId}"
+      responses:
+        '200':
+          $ref: '#/components/responses/JamResponse'
+        '404':
+          $ref: '#/components/responses/JamNotFoundError'
+      security:
+        - authCookie: []
+      operationId: getJam
+      description: Returns a jam.
+  /jams/{jamId}/submissions:
+    parameters:
+      - $ref: '#/components/parameters/jamId'
+    get:
+      summary: Show jam submissions
+      tags:
+        - jams
+      x-codeSamples:
+        - lang: cURL
+          source: curl -X GET "https://vrchat.com/api/1/jams/{jamId}/submissions"
+      responses:
+        '200':
+          $ref: '#/components/responses/SubmissionListResponse'
+        '404':
+          $ref: '#/components/responses/JamNotFoundError'
+      security:
+        - authCookie: []
+      operationId: getJamSubmissions
+      description: Returns all submissions of a jam.
   /users:
     get:
       summary: Search All Users
@@ -3304,7 +3326,7 @@ paths:
                  -b "auth={authCookie}"
       responses:
         '200':
-          $ref: '#/components/responses/LimitedWorldListResponse'
+          $ref: '#/components/responses/FavoritedWorldListResponse'
         '401':
           $ref: '#/components/responses/MissingCredentialsError'
         '403':
@@ -3552,7 +3574,6 @@ components:
           type: boolean
       required:
         - userExists
-        - nameOk
       title: UserExists
       type: object
     Response:
@@ -3707,6 +3728,8 @@ components:
         avatarThumbnail:
           type: string
           nullable: true
+        currentAvatarTags:
+          type: string
         displayName:
           type: string
         groups:
@@ -3743,6 +3766,9 @@ components:
         travelingToWorld:
           $ref: '#/components/schemas/WorldID'
           nullable: true
+        userIcon:
+          type: string
+          nullable: true
         world:
           $ref: '#/components/schemas/WorldID'
           nullable: true
@@ -3772,6 +3798,8 @@ components:
       title: UserStatus
       default: offline
     CurrentUser:
+      title: CurrentUser
+      type: object
       properties:
         acceptedTOSVersion:
           minimum: 0
@@ -3796,6 +3824,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserID'
+        ageVerificationStatus:
+          type: string
+        ageVerified:
+          type: boolean
         allowAvatarCopying:
           type: boolean
         badges:
@@ -3865,6 +3897,8 @@ components:
           $ref: '#/components/schemas/WorldID'
         id:
           $ref: '#/components/schemas/UserID'
+        isAdult:
+          type: boolean
         isBoopingEnabled:
           default: true
           type: boolean
@@ -3918,6 +3952,11 @@ components:
           type: string
         pronouns:
           type: string
+        queuedInstance:
+          type: string
+          nullable: true
+        receiveMobileInvitations:
+          type: boolean
         state:
           $ref: '#/components/schemas/UserState'
         status:
@@ -4000,8 +4039,9 @@ components:
         - date_joined
         - isFriend
         - friendKey
-      title: CurrentUser
-      type: object
+        - isAdult
+        - ageVerificationStatus
+        - ageVerified
     TwoFactorAuthCode:
       title: TwoFactorAuthCode
       type: object
@@ -4066,48 +4106,65 @@ components:
       example: unp_52b12c39-4163-457d-a4a9-630e7aff1bff
       title: UnityPackageID
       type: string
+    PerformanceRatings:
+      type: string
+      title: PerformanceRatings
+      example: Excellent
+      enum:
+        - None
+        - Excellent
+        - Good
+        - Medium
+        - Poor
+        - VeryPoor
+      description: Avatar Performance ratings.
     UnityPackage:
       description: ''
-      example:
-        assetUrl: https://vrchat.com/api/1/file/file_cd0caa7b-69ba-4715-8dfe-7d667a9d2537/65/file
-        assetUrlObject: {}
-        assetVersion: 4
-        created_at: '2020-09-10T06:13:27.777Z'
-        id: unp_52b12c39-4163-457d-a4a9-630e7aff1bff
-        platform: standalonewindows
-        pluginUrl: ''
-        pluginUrlObject: {}
-        unitySortNumber: 20180414000
-        unityVersion: 2022.3.6f1
       properties:
         id:
           $ref: '#/components/schemas/UnityPackageID'
         assetUrl:
           type: string
           nullable: true
+          example: https://vrchat.com/api/1/file/file_cd0caa7b-69ba-4715-8dfe-7d667a9d2537/65/file
         assetUrlObject:
           type: object
+          example: {}
         assetVersion:
           minimum: 0
           type: integer
+          example: 4
         created_at:
           format: date-time
           type: string
+          example: '2020-09-10T06:13:27.777Z'
+        impostorizerVersion:
+          type: string
+          example: 0.17.0
+        performanceRating:
+          $ref: '#/components/schemas/PerformanceRatings'
         platform:
           $ref: '#/components/schemas/Platform'
         pluginUrl:
           type: string
+          example: ''
         pluginUrlObject:
           type: object
+          example: {}
         unitySortNumber:
           minimum: 0
           type: integer
           format: int64
+          example: 20180414000
         unityVersion:
           default: 5.3.4p1
           example: 2022.3.6f1
           minLength: 1
           type: string
+        worldSignature:
+          example: AHiPAWerwCpeYrxDthF5TU2SdUWEWnm43UAn8PKRXlS8k8tVRQ==
+          type: string
+          nullable: true
         impostorUrl:
           type: string
           nullable: true
@@ -4158,6 +4215,19 @@ components:
           type: string
         releaseStatus:
           $ref: '#/components/schemas/ReleaseStatus'
+        styles:
+          type: object
+          properties:
+            primary:
+              type: string
+              nullable: true
+            secondary:
+              type: string
+              nullable: true
+            supplementary:
+              type: array
+              items:
+                type: string
         tags:
           description: ' '
           items:
@@ -4199,6 +4269,7 @@ components:
         - imageUrl
         - name
         - releaseStatus
+        - styles
         - tags
         - thumbnailImageUrl
         - unityPackages
@@ -4265,7 +4336,7 @@ components:
         releaseStatus:
           $ref: '#/components/schemas/ReleaseStatus'
         version:
-          type: number
+          type: integer
           minimum: 0
           default: 1
         unityPackageUrl:
@@ -4303,7 +4374,7 @@ components:
         releaseStatus:
           $ref: '#/components/schemas/ReleaseStatus'
         version:
-          type: number
+          type: integer
           minimum: 0
           default: 1
         unityPackageUrl:
@@ -4372,7 +4443,7 @@ components:
         period:
           $ref: '#/components/schemas/SubscriptionPeriod'
         tier:
-          type: number
+          type: integer
       required:
         - id
         - steamItemId
@@ -4447,7 +4518,7 @@ components:
           type: string
           minLength: 1
         itemId:
-          type: number
+          type: integer
         agreement:
           type: string
         status:
@@ -4458,7 +4529,7 @@ components:
           type: string
           minLength: 1
         frequency:
-          type: number
+          type: integer
         billingType:
           type: string
           minLength: 1
@@ -4487,9 +4558,9 @@ components:
         lastAmountVat:
           type: number
         outstanding:
-          type: number
+          type: integer
         failedAttempts:
-          type: number
+          type: integer
       required:
         - agreementId
         - itemId
@@ -4586,7 +4657,7 @@ components:
         period:
           $ref: '#/components/schemas/SubscriptionPeriod'
         tier:
-          type: number
+          type: integer
           example: 5
         active:
           type: boolean
@@ -4995,12 +5066,12 @@ components:
           type: string
           minLength: 1
         signatureSizeInBytes:
-          type: number
+          type: integer
         fileMd5:
           type: string
           minLength: 1
         fileSizeInBytes:
-          type: number
+          type: integer
       required:
         - signatureMd5
         - signatureSizeInBytes
@@ -5060,11 +5131,11 @@ components:
           minLength: 1
           example: Avatar-MyAvatar-Un.file_00000000-0000-0000-0000-000000000000.1.unitypackage
         nextPartNumber:
-          type: number
+          type: integer
           minimum: 0
           example: 0
         maxParts:
-          type: number
+          type: integer
           minimum: 1
           example: 1000
         parts:
@@ -5115,6 +5186,10 @@ components:
           type: boolean
         last_platform:
           $ref: '#/components/schemas/Platform'
+        last_login:
+          type: string
+          nullable: true
+          format: date-time
         profilePicOverride:
           type: string
         pronouns:
@@ -5430,7 +5505,7 @@ components:
           type: string
           nullable: true
         acceptedById:
-          $ref: '#/components/schemas/UserID'
+          type: string
           nullable: true
         createdAt:
           type: string
@@ -5514,6 +5589,10 @@ components:
       title: Group
       type: object
       properties:
+        badges:
+          type: array
+          items:
+            type: string
         id:
           $ref: '#/components/schemas/GroupID'
         name:
@@ -5784,6 +5863,12 @@ components:
       title: GroupMember
       type: object
       properties:
+        acceptedByDisplayName:
+          type: string
+          nullable: true
+        acceptedById:
+          type: string
+          nullable: true
         id:
           $ref: '#/components/schemas/GroupMemberID'
         groupId:
@@ -6095,6 +6180,10 @@ components:
         updated_at:
           format: date-time
           type: string
+        urlList:
+          type: array
+          items:
+            type: string
         version:
           default: 0
           example: 68
@@ -6624,6 +6713,7 @@ components:
         - us
         - use
         - usw
+        - usx
         - eu
         - jp
         - unknown
@@ -6637,6 +6727,10 @@ components:
         - standalonewindows
       properties:
         android:
+          type: integer
+          minimum: 0
+          example: 1
+        ios:
           type: integer
           minimum: 0
           example: 1
@@ -6656,6 +6750,9 @@ components:
           default: true
           example: true
           type: boolean
+        ageGate:
+          nullable: true
+          type: string
         canRequestInvite:
           default: true
           example: true
@@ -6669,15 +6766,23 @@ components:
           minLength: 1
           deprecated: true
           description: Always returns "unknown".
+        displayName:
+          type: string
+          nullable: true
         full:
           default: false
           type: boolean
+        gameServerVersion:
+          type: integer
         id:
           $ref: '#/components/schemas/InstanceID'
         instanceId:
           type: string
           minLength: 1
           example: 12345~hidden(usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469)~region(eu)~nonce(27e8414a-59a0-4f3d-af1f-f27557eb49a2)
+        instancePersistenceEnabled:
+          type: string
+          nullable: true
         location:
           $ref: '#/components/schemas/InstanceID'
         n_users:
@@ -6697,6 +6802,9 @@ components:
           $ref: '#/components/schemas/Region'
         platforms:
           $ref: '#/components/schemas/InstancePlatforms'
+        playerPersistenceEnabled:
+          type: boolean
+          nullable: true
         region:
           $ref: '#/components/schemas/InstanceRegion'
         secureName:
@@ -6770,15 +6878,19 @@ components:
         - canRequestInvite
         - capacity
         - clientNumber
+        - displayName
         - full
+        - gameServerVersion
         - id
         - instanceId
+        - instancePersistenceEnabled
         - location
         - n_users
         - name
         - permanent
         - photonRegion
         - platforms
+        - playerPersistenceEnabled
         - region
         - secureName
         - tags
@@ -6800,6 +6912,7 @@ components:
           type: string
           minLength: 1
           example: 02u7yz8j
+          nullable: true
       required:
         - secureName
       title: InstanceShortNameResponse
@@ -6811,6 +6924,10 @@ components:
     Permission:
       description: ''
       properties:
+        displayName:
+          type: string
+        description:
+          type: string
         id:
           $ref: '#/components/schemas/PermissionID'
         ownerDisplayName:
@@ -6821,6 +6938,8 @@ components:
           type: string
         ownerId:
           $ref: '#/components/schemas/UserID'
+        type:
+          type: string
         data:
           type: object
       required:
@@ -6904,6 +7023,121 @@ components:
       required:
         - name
         - text
+    PerformanceLimiterInfo:
+      title: PerformanceLimiterInfo
+      type: object
+      description: Info about the performance limits on a platform
+      properties:
+        allowed:
+          type: boolean
+        maxSeats:
+          type: integer
+          description: Maximum amount of seats. -1 means no limit.
+      required:
+        - allowed
+        - maxSeats
+    APIConfigConstants:
+      title: APIConfigConstants
+      type: object
+      description: Constants
+      properties:
+        GROUPS:
+          type: object
+          description: Group-related constants
+          properties:
+            CAPACITY:
+              type: integer
+              description: Maximum group capacity
+              default: 100000
+            GROUP_TRANSFER_REQUIREMENTS:
+              type: array
+              description: Requirements for transferring group ownership
+              items:
+                type: string
+                description: Requirement for transferring group ownership
+            MAX_INVITES_REQUESTS:
+              type: integer
+              description: Maximum number of invite requests
+              default: 50
+            MAX_JOINED:
+              type: integer
+              description: Maximum number of joined groups
+              default: 100
+            MAX_JOINED_PLUS:
+              type: integer
+              description: Maximum number of joined groups for VRChat Plus members
+              default: 200
+            MAX_LANGUAGES:
+              type: integer
+              description: Maximum number of supported languages
+              default: 10
+            MAX_LINKS:
+              type: integer
+              description: Maximum number of group links
+              default: 3
+            MAX_MANAGEMENT_ROLES:
+              type: integer
+              description: Maximum number of management roles in a group
+              default: 5
+            MAX_OWNED:
+              type: integer
+              description: Maximum number of groups a user can own
+              default: 5
+            MAX_ROLES:
+              type: integer
+              description: Maximum number of roles in a group
+              default: 50
+        INSTANCE:
+          type: object
+          description: Instance-related constants
+          properties:
+            POPULATION_BRACKETS:
+              type: object
+              description: Population brackets based on instance population
+              properties:
+                CROWDED:
+                  type: object
+                  description: Crowded population range
+                  properties:
+                    max:
+                      type: integer
+                      description: Maximum population for a crowded instance
+                    min:
+                      type: integer
+                      description: Minimum population for a crowded instance
+                FEW:
+                  type: object
+                  description: Few population range
+                  properties:
+                    max:
+                      type: integer
+                      description: Maximum population for a few instance
+                    min:
+                      type: integer
+                      description: Minimum population for a few instance
+                MANY:
+                  type: object
+                  description: Many population range
+                  properties:
+                    max:
+                      type: integer
+                      description: Maximum population for a many instance
+                    min:
+                      type: integer
+                      description: Minimum population for a many instance
+        LANGUAGE:
+          type: object
+          description: Language-related constants
+          properties:
+            SPOKEN_LANGUAGE_OPTIONS:
+              type: object
+              description: Supported spoken language options
+              additionalProperties:
+                type: string
+      required:
+        - GROUPS
+        - INSTANCE
+        - LANGUAGE
     DeploymentGroup:
       type: string
       description: |-
@@ -7035,6 +7269,48 @@ components:
         viewSegmentLength:
           description: Unknown
           type: integer
+    PlatformBuildInfo:
+      title: PlatformBuildInfo
+      type: object
+      description: Build information for a platform
+      properties:
+        minBuildNumber:
+          type: integer
+          description: Minimum build number required for the platform
+        redirectionAddress:
+          type: string
+          description: Redirection URL for updating the app
+      required:
+        - minBuildNumber
+        - redirectionAddress
+    ReportCategory:
+      title: ReportCategory
+      type: object
+      description: A category used for reporting content
+      properties:
+        text:
+          type: string
+          description: The label of the report category
+        tooltip:
+          type: string
+          description: The tooltip that describes the category
+      required:
+        - text
+        - tooltip
+    ReportReason:
+      title: ReportReason
+      type: object
+      description: A reason used for reporting users
+      properties:
+        text:
+          type: string
+          description: The label or name of the report reason
+        tooltip:
+          type: string
+          description: A brief explanation of what this reason entails
+      required:
+        - text
+        - tooltip
     APIConfig:
       title: APIConfig
       type: object
@@ -7052,6 +7328,10 @@ components:
           description: VRChat's office address
           minLength: 1
           type: string
+        ageVerificationP:
+          type: boolean
+        ageVerificationStatusVisible:
+          type: boolean
         announcements:
           type: array
           description: Public Announcements
@@ -7059,6 +7339,12 @@ components:
           minItems: 0
           items:
             $ref: '#/components/schemas/APIConfigAnnouncement'
+        analyticsSegment_NewUI_PctOfUsers:
+          description: Unknown
+          type: integer
+        analyticsSegment_NewUI_Salt:
+          description: Unknown
+          type: string
         appName:
           default: VrChat
           deprecated: true
@@ -7075,10 +7361,36 @@ components:
           type: array
           items:
             type: string
+        avatarPerfLimiter:
+          type: object
+          properties:
+            AndroidMobile:
+              $ref: '#/components/schemas/PerformanceLimiterInfo'
+            PC:
+              $ref: '#/components/schemas/PerformanceLimiterInfo'
+            Pico:
+              $ref: '#/components/schemas/PerformanceLimiterInfo'
+            Quest:
+              $ref: '#/components/schemas/PerformanceLimiterInfo'
+            XRElite:
+              $ref: '#/components/schemas/PerformanceLimiterInfo'
+            iOSMobile:
+              $ref: '#/components/schemas/PerformanceLimiterInfo'
+          required:
+            - AndroidMobile
+            - PC
+            - Pico
+            - Quest
+            - XRElite
+            - iOSMobile
         buildVersionTag:
           description: Build tag of the API server
           minLength: 1
           type: string
+        chatboxLogBufferSeconds:
+          default: 40
+          description: Unknown
+          type: integer
         clientApiKey:
           description: apiKey to be used for all other requests
           minLength: 1
@@ -7093,6 +7405,10 @@ components:
           type: integer
         clientNetDispatchThread:
           default: false
+          description: Unknown
+          type: boolean
+        clientNetDispatchThreadMobile:
+          default: true
           description: Unknown
           type: boolean
         clientNetInThread:
@@ -7139,6 +7455,8 @@ components:
           default: 15
           description: Unknown
           type: integer
+        constants:
+          $ref: '#/components/schemas/APIConfigConstants'
         contactEmail:
           description: VRChat's contact email
           minLength: 1
@@ -7158,6 +7476,8 @@ components:
           type: integer
         defaultAvatar:
           $ref: '#/components/schemas/AvatarID'
+        defaultStickerSet:
+          type: string
         deploymentGroup:
           $ref: '#/components/schemas/DeploymentGroup'
         devLanguageCodes:
@@ -7273,6 +7593,14 @@ components:
           type: integer
         events:
           $ref: '#/components/schemas/APIConfigEvents'
+        forceUseLatestWorld:
+          default: true
+          description: Unknown
+          type: boolean
+        googleApiClientId:
+          type: string
+          description: Unknown
+          default: 827942544393-r2ouvckvouldn9dg9uruseje575e878f.apps.googleusercontent.com
         homeWorldId:
           $ref: '#/components/schemas/WorldID'
         homepageRedirectTarget:
@@ -7291,6 +7619,48 @@ components:
           description: VRChat's job application email
           minLength: 1
           type: string
+        minSupportedClientBuildNumber:
+          type: object
+          description: Minimum supported client build number for various platforms
+          properties:
+            AppStore:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            Default:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            Firebase:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            FirebaseiOS:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            GooglePlay:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            PC:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            PicoStore:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            QuestAppLab:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            QuestStore:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            TestFlight:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+            XRElite:
+              $ref: '#/components/schemas/PlatformBuildInfo'
+          required:
+            - AppStore
+            - Default
+            - Firebase
+            - FirebaseiOS
+            - GooglePlay
+            - PC
+            - PicoStore
+            - QuestAppLab
+            - QuestStore
+            - TestFlight
+            - XRElite
+        minimumUnityVersionForUploads:
+          type: string
+          description: Minimum Unity version required for uploading assets
+          default: 2019.0.0f1
         moderationEmail:
           description: VRChat's moderation related email
           minLength: 1
@@ -7299,6 +7669,136 @@ components:
           description: Used in-game to notify a user they aren't allowed to select avatars in private worlds
           minLength: 1
           type: string
+        offlineAnalysis:
+          type: object
+          description: Whether to allow offline analysis
+          properties:
+            android:
+              type: boolean
+              description: Whether to allow offline analysis
+              default: true
+            standalonewindows:
+              type: boolean
+              description: Whether to allow offline analysis
+              default: true
+        photonNameserverOverrides:
+          type: array
+          description: Unknown
+          items:
+            type: string
+        photonPublicKeys:
+          type: array
+          description: Unknown
+          items:
+            type: string
+        reportCategories:
+          type: object
+          description: Categories available for reporting objectionable content
+          properties:
+            avatar:
+              $ref: '#/components/schemas/ReportCategory'
+            behavior:
+              $ref: '#/components/schemas/ReportCategory'
+            chat:
+              $ref: '#/components/schemas/ReportCategory'
+            emoji:
+              $ref: '#/components/schemas/ReportCategory'
+            environment:
+              $ref: '#/components/schemas/ReportCategory'
+            groupstore:
+              $ref: '#/components/schemas/ReportCategory'
+            image:
+              $ref: '#/components/schemas/ReportCategory'
+            text:
+              $ref: '#/components/schemas/ReportCategory'
+            sticker:
+              $ref: '#/components/schemas/ReportCategory'
+            warnings:
+              $ref: '#/components/schemas/ReportCategory'
+            worldimage:
+              $ref: '#/components/schemas/ReportCategory'
+            worldstore:
+              $ref: '#/components/schemas/ReportCategory'
+          required:
+            - avatar
+            - behavior
+            - chat
+            - environment
+            - groupstore
+            - image
+            - text
+            - warnings
+            - worldimage
+            - worldstore
+        reportFormUrl:
+          type: string
+          description: URL to the report form
+          default: https://help.vrchat.com/hc/en-us/requests/new?ticket_form_id=1500000182242&tf_360056455174=user_report&tf_360057451993={userId}&tf_1500001445142={reportedId}&tf_subject={reason} {category} By {contentType} {reportedName}&tf_description={description}
+        reportOptions:
+          type: object
+          description: Options for reporting content
+        reportReasons:
+          type: object
+          description: Reasons available for reporting users
+          properties:
+            billing:
+              $ref: '#/components/schemas/ReportReason'
+            botting:
+              $ref: '#/components/schemas/ReportReason'
+            cancellation:
+              $ref: '#/components/schemas/ReportReason'
+            gore:
+              $ref: '#/components/schemas/ReportReason'
+            hacking:
+              $ref: '#/components/schemas/ReportReason'
+            harassing:
+              $ref: '#/components/schemas/ReportReason'
+            hateful:
+              $ref: '#/components/schemas/ReportReason'
+            impersonation:
+              $ref: '#/components/schemas/ReportReason'
+            inappropriate:
+              $ref: '#/components/schemas/ReportReason'
+            leaking:
+              $ref: '#/components/schemas/ReportReason'
+            malicious:
+              $ref: '#/components/schemas/ReportReason'
+            missing:
+              $ref: '#/components/schemas/ReportReason'
+            nudity:
+              $ref: '#/components/schemas/ReportReason'
+            renewal:
+              $ref: '#/components/schemas/ReportReason'
+            security:
+              $ref: '#/components/schemas/ReportReason'
+            service:
+              $ref: '#/components/schemas/ReportReason'
+            sexual:
+              $ref: '#/components/schemas/ReportReason'
+            threatening:
+              $ref: '#/components/schemas/ReportReason'
+            visuals:
+              $ref: '#/components/schemas/ReportReason'
+          required:
+            - billing
+            - botting
+            - cancellation
+            - gore
+            - hacking
+            - harassing
+            - hateful
+            - impersonation
+            - inappropriate
+            - leaking
+            - malicious
+            - missing
+            - nudity
+            - renewal
+            - security
+            - service
+            - sexual
+            - threatening
+            - visuals
         sdkDeveloperFaqUrl:
           description: Link to the developer FAQ
           minLength: 1
@@ -7328,6 +7828,13 @@ components:
           description: VRChat's support email
           minLength: 1
           type: string
+        supportFormUrl:
+          description: VRChat's support form
+          type: string
+        timekeeping:
+          type: boolean
+          description: Unknown
+          default: true
         timeOutWorldId:
           $ref: '#/components/schemas/WorldID'
         tutorialWorldId:
@@ -7373,24 +7880,45 @@ components:
           description: Currently used youtube-dl.exe hash in SHA1-delimited format
           minLength: 1
           type: string
+        websocketMaxFriendsRefreshDelay:
+          type: integer
+          description: Unknown
+          default: 900
+        websocketQuickReconnectTime:
+          type: integer
+          description: Unknown
+          default: 2
+        websocketReconnectMaxDelay:
+          type: integer
+          description: Unknown
+          default: 2
       required:
         - VoiceEnableDegradation
         - VoiceEnableReceiverLimiting
         - address
+        - ageVerificationP
+        - ageVerificationStatusVisible
         - announcements
+        - analyticsSegment_NewUI_PctOfUsers
+        - analyticsSegment_NewUI_Salt
         - appName
         - availableLanguageCodes
         - availableLanguages
+        - avatarPerfLimiter
         - buildVersionTag
+        - chatboxLogBufferSeconds
         - clientApiKey
         - clientBPSCeiling
+        - clientNetDispatchThreadMobile
         - clientDisconnectTimeout
         - clientReservedPlayerBPS
         - clientSentCountAllowance
         - contactEmail
+        - constants
         - copyrightEmail
         - currentTOSVersion
         - defaultAvatar
+        - defaultStickerSet
         - deploymentGroup
         - devSdkUrl
         - devSdkVersion
@@ -7414,13 +7942,24 @@ components:
         - downloadUrls
         - dynamicWorldRows
         - events
+        - forceUseLatestWorld
+        - googleApiClientId
         - homeWorldId
         - homepageRedirectTarget
         - hubWorldId
         - imageHostUrlList
         - jobsEmail
+        - minSupportedClientBuildNumber
+        - minimumUnityVersionForUploads
         - moderationEmail
         - notAllowedToSelectAvatarInPrivateWorldMessage
+        - offlineAnalysis
+        - photonNameserverOverrides
+        - photonPublicKeys
+        - reportCategories
+        - reportFormUrl
+        - reportOptions
+        - reportReasons
         - sdkDeveloperFaqUrl
         - sdkDiscordUrl
         - sdkNotAllowedToPublishMessage
@@ -7428,6 +7967,8 @@ components:
         - serverName
         - stringHostUrlList
         - supportEmail
+        - supportFormUrl
+        - timekeeping
         - timeOutWorldId
         - tutorialWorldId
         - updateRateMsMaximum
@@ -7441,6 +7982,9 @@ components:
         - whiteListedAssetUrls
         - player-url-resolver-version
         - player-url-resolver-sha1
+        - websocketMaxFriendsRefreshDelay
+        - websocketQuickReconnectTime
+        - websocketReconnectMaxDelay
     InfoPushDataClickable:
       type: object
       title: InfoPushDataClickable
@@ -7567,10 +8111,115 @@ components:
         - ok
         - serverName
         - buildVersionTag
+    Jam:
+      description: ''
+      properties:
+        description:
+          minLength: 1
+          type: string
+        id:
+          type: string
+          minLength: 1
+          example: jam_0b7e3f6d-4647-4648-b2a1-1431e76906d9
+        isVisible:
+          type: boolean
+        moreInfo:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          minLength: 1
+          description: |-
+            One of:
+            - submissions_open
+            - closed
+        stateChangeDates:
+          type: object
+          properties:
+            closed:
+              type: string
+              format: date-time
+              nullable: true
+            submissionsClosed:
+              type: string
+              format: date-time
+              nullable: true
+            submissionsOpened:
+              type: string
+              format: date-time
+              nullable: true
+            winnersSelected:
+              type: string
+              format: date-time
+              nullable: true
+              example: null
+        submissionContentGateDate:
+          type: string
+          format: date-time
+          nullable: true
+        submissionContentGated:
+          type: boolean
+        title:
+          type: string
+          minLength: 1
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - description
+        - id
+        - isVisible
+        - moreInfo
+        - state
+        - stateChangeDates
+        - submissionContentGateDate
+        - submissionContentGated
+        - title
+        - type
+        - updated_at
+      title: Jam
+      type: object
+    Submission:
+      description: ''
+      properties:
+        contentId:
+          minLength: 1
+          type: string
+          description: Either world ID or avatar ID
+        created_at:
+          type: string
+          format: date-time
+        description:
+          type: string
+        id:
+          type: string
+          minLength: 1
+          example: jsub_f01f44fa-89fa-443c-ab4c-7fed9245970f
+        jamId:
+          type: string
+          minLength: 1
+          example: jam_0b7e3f6d-4647-4648-b2a1-1431e76906d9
+        ratingScore:
+          type: integer
+          minimum: 0
+        submitterId:
+          $ref: '#/components/schemas/UserID'
+      required:
+        - contentId
+        - created_at
+        - description
+        - id
+        - jamId
+        - ratingsScore
+        - submitterId
+      title: Submission
+      type: object
     User:
       title: User
       type: object
       properties:
+        ageVerificationStatus:
+          type: string
         allowAvatarCopying:
           type: boolean
           default: true
@@ -7620,6 +8269,9 @@ components:
         last_login:
           type: string
           description: Either a date-time or empty string.
+        last_mobile:
+          type: string
+          nullable: true
         last_platform:
           $ref: '#/components/schemas/Platform'
         location:
@@ -7662,6 +8314,7 @@ components:
         worldId:
           $ref: '#/components/schemas/WorldID'
       required:
+        - ageVerificationStatus
         - allowAvatarCopying
         - bio
         - bioLinks
@@ -7677,7 +8330,6 @@ components:
         - last_activity
         - last_login
         - last_platform
-        - platform
         - profilePicOverride
         - profilePicOverrideThumbnail
         - pronouns
@@ -7696,7 +8348,7 @@ components:
           type: string
           format: date
         acceptedTOSVersion:
-          type: number
+          type: integer
         tags:
           description: ' '
           type: array
@@ -7983,6 +8635,140 @@ components:
         - assetUrl
         - imageUrl
         - name
+    FavoritedWorld:
+      description: ''
+      properties:
+        authorId:
+          $ref: '#/components/schemas/UserID'
+        authorName:
+          minLength: 1
+          type: string
+        capacity:
+          example: 8
+          type: integer
+        description:
+          minLength: 1
+          type: string
+        recommendedCapacity:
+          example: 16
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        favorites:
+          default: 0
+          example: 12024
+          minimum: 0
+          type: integer
+        favoriteGroup:
+          minLength: 1
+          type: string
+        favoriteId:
+          $ref: '#/components/schemas/FavoriteID'
+        featured:
+          default: false
+          type: boolean
+        visits:
+          default: 0
+          example: 9988675
+          minimum: 0
+          type: integer
+        heat:
+          default: 0
+          example: 5
+          minimum: 0
+          type: integer
+        id:
+          $ref: '#/components/schemas/WorldID'
+        imageUrl:
+          minLength: 1
+          type: string
+        labsPublicationDate:
+          example: none
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        occupants:
+          default: 0
+          example: 47
+          minimum: 0
+          type: integer
+        organization:
+          default: vrchat
+          minLength: 1
+          type: string
+        popularity:
+          default: 0
+          example: 8
+          minimum: 0
+          type: integer
+        previewYoutubeId:
+          type: string
+          nullable: true
+        publicationDate:
+          example: none
+          minLength: 1
+          type: string
+        releaseStatus:
+          $ref: '#/components/schemas/ReleaseStatus'
+        tags:
+          description: ' '
+          items:
+            $ref: '#/components/schemas/Tag'
+          type: array
+        thumbnailImageUrl:
+          minLength: 1
+          type: string
+        unityPackages:
+          description: ' '
+          items:
+            $ref: '#/components/schemas/UnityPackage'
+          minItems: 1
+          type: array
+        updated_at:
+          format: date-time
+          type: string
+        urlList:
+          type: array
+          items:
+            type: string
+        udonProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/UdonProductId'
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - description
+        - name
+        - authorId
+        - authorName
+        - capacity
+        - imageUrl
+        - thumbnailImageUrl
+        - releaseStatus
+        - organization
+        - tags
+        - favorites
+        - favoriteGroup
+        - favoriteId
+        - featured
+        - created_at
+        - updated_at
+        - publicationDate
+        - labsPublicationDate
+        - unityPackages
+        - urlList
+        - popularity
+        - heat
+        - occupants
+        - version
+      title: FavoritedWorld
+      type: object
     UpdateWorldRequest:
       title: UpdateWorldRequest
       type: object
@@ -8348,14 +9134,6 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Subscription'
-    LicenseGroupListResponse:
-      description: Returns a list of LicenseGroup objects.
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/LicenseGroup'
     LicenseGroupResponse:
       description: Returns a single LicenseGroup object.
       content:
@@ -9194,21 +9972,9 @@ components:
     InstanceShortNameResponse:
       description: Returns an instance secureName and/or shortName.
       content:
-        text/plain:
-          schema:
-            $ref: '#/components/schemas/InstanceShortNameResponse'
-    InstanceSelfInviteSuccess:
-      description: Success response after sending an invite to yourself to the instance.
-      content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Success'
-          examples:
-            200 Ok:
-              value:
-                success:
-                  message: Ok
-                  status_code: 200
+            $ref: '#/components/schemas/InstanceShortNameResponse'
     NotificationListResponse:
       description: Returns a list of Notifcation objects.
       content:
@@ -9217,6 +9983,18 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Notification'
+    NotificationNotFoundError:
+      description: Error response when trying to perform operations on a non-existing notification.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            404 World Not Found:
+              value:
+                error:
+                  message: Notification not found
+                  status_code: 404
     FriendSuccess:
       description: Successful response after friending a user.
       content:
@@ -9355,42 +10133,6 @@ components:
                 success:
                   message: OK
                   status_code: 200
-    PlayerModerationNotFoundError:
-      description: Error response when trying to show information about a non-existent player moderation.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          examples:
-            404 Player Moderation Not Found:
-              value:
-                error:
-                  message: Can't find playerModerationǃ
-                  status_code: 404
-    PlayerModerationRemovedSuccess:
-      description: Success response after removing a PlayerModeration by ID.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Success'
-          examples:
-            200 Player Moderation Removed:
-              value:
-                success:
-                  message: PlayerModeration pmod_25551a8d-6f5d-430a-88d3-9c0ce08b5244 removed
-                  status_code: 200
-    PlayerModerationDeleteOthersError:
-      description: Error response when trying to delete someone else's player moderation.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          examples:
-            403 Can't delete Player Moderation You Didn't Create:
-              value:
-                error:
-                  message: You definitely can't delete a playerModeration you didn't create
-                  status_code: 403
     PlayerModerationUnmoderatedSuccess:
       description: Success response after unmoderating a player moderation.
       content:
@@ -9521,6 +10263,40 @@ components:
             format: date-time
             example: '2021-08-20T12:38:42+00:00'
             description: Does not return millisecond precision. Always returns time in UTC.
+    JamListResponse:
+      description: Returns a list of Jam objects.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Jam'
+    JamResponse:
+      description: Returns a Jam object.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Jam'
+    JamNotFoundError:
+      description: Error response when trying to show information about a non-existent jam.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            404 Jam not found:
+              value:
+                error:
+                  message: 404 id must be an ID˸ 'invalid_id_here'
+                  status_code: 404
+    SubmissionListResponse:
+      description: Returns a list of Submission objects.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Submission'
     UserResponse:
       description: Returns a single User object.
       content:
@@ -9569,6 +10345,14 @@ components:
                 error:
                   message: \"You can't create a world right now\"
                   status_code: 400
+    FavoritedWorldListResponse:
+      description: Returns a list of FavoritedWorld objects.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/FavoritedWorld'
     WorldSeeOtherUserFavoritesError:
       description: Error response when trying to see favourited worlds of another user without sufficient admin permissions.
       content:
@@ -9884,6 +10668,13 @@ components:
       schema:
         $ref: '#/components/schemas/GroupSearchSort'
       description: The sort order of Group Member results
+    groupMemberRoleFilter:
+      name: roleId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/GroupRoleID'
+      description: Only returns members with a specific groupRoleId
     groupRoleId:
       name: groupRoleId
       in: path
@@ -9971,6 +10762,14 @@ components:
         default: main
       allowEmptyValue: true
       description: Specifies which git branch the site should load frontend source code from.
+    jamId:
+      name: jamId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: jam_0b7e3f6d-4647-4648-b2a1-1431e76906d9
+      description: Must be a valid query ID.
     fuzzy:
       name: fuzzy
       in: query
