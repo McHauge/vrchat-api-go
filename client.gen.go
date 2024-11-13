@@ -13,9 +13,9 @@ type Client struct {
 	client *resty.Client
 }
 
-func NewClient(baseURL string) *Client {
+func NewClient(baseURL string, UserAgent string) *Client {
 	return &Client{
-		client: resty.New().SetBaseURL(baseURL),
+		client: resty.New().SetBaseURL(baseURL).SetHeader("User-Agent", UserAgent),
 	}
 }
 
