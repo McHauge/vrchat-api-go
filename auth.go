@@ -4,8 +4,31 @@ import (
 	"fmt"
 )
 
-// AuthenticateRecoveryOTP authenticates the client with the VRChat API using the email recovery OTP code.
-func (c *Client) AuthenticateRecoveryOTP(username, password, totp string) error {
+// Authenticate authenticates the client with the VRChat API using the username and password.
+func (c *Client) Authenticate(username, password string) (string, error) {
+	c.client.SetHeaders(map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	resp, err := c.client.R().
+		SetBasicAuth(username, password).
+		Get("/auth/user")
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode() != 200 {
+		return "", fmt.Errorf("failed to authenticate: %s", resp.String())
+	}
+
+	cookies := resp.Cookies()
+	c.client.SetCookies(cookies)
+
+	return resp.String(), nil
+}
+
+// VerifyRecoveryOTP authenticates the client with the VRChat API using the email recovery OTP code.
+func (c *Client) VerifyRecoveryOTP(username, password, totp string) (string, error) {
 	c.client.SetHeaders(map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
@@ -17,21 +40,21 @@ func (c *Client) AuthenticateRecoveryOTP(username, password, totp string) error 
 		}).
 		Post("/auth/twofactorauth/otp/verify")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if resp.StatusCode() != 200 {
-		return fmt.Errorf("failed to authenticate: %s", resp.String())
+		return "", fmt.Errorf("failed to authenticate: %s", resp.String())
 	}
 
 	cookies := resp.Cookies()
 	c.client.SetCookies(cookies)
 
-	return nil
+	return resp.String(), nil
 }
 
-// AuthenticateEmailOTP authenticates the client with the VRChat API using the email OTP code.
-func (c *Client) AuthenticateEmailOTP(username, password, totp string) error {
+// VerifyEmailOTP authenticates the client with the VRChat API using the email OTP code.
+func (c *Client) VerifyEmailOTP(username, password, totp string) (string, error) {
 	c.client.SetHeaders(map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
@@ -43,21 +66,21 @@ func (c *Client) AuthenticateEmailOTP(username, password, totp string) error {
 		}).
 		Post("/auth/twofactorauth/emailotp/verify")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if resp.StatusCode() != 200 {
-		return fmt.Errorf("failed to authenticate: %s", resp.String())
+		return "", fmt.Errorf("failed to authenticate: %s", resp.String())
 	}
 
 	cookies := resp.Cookies()
 	c.client.SetCookies(cookies)
 
-	return nil
+	return resp.String(), nil
 }
 
-// AuthenticateTOTP authenticates the client with the VRChat API using the TOTP code.
-func (c *Client) AuthenticateTOTP(username, password, totp string) error {
+// VerifyTOTP authenticates the client with the VRChat API using the TOTP code.
+func (c *Client) VerifyTOTP(username, password, totp string) (string, error) {
 	c.client.SetHeaders(map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
@@ -69,15 +92,15 @@ func (c *Client) AuthenticateTOTP(username, password, totp string) error {
 		}).
 		Post("/auth/twofactorauth/totp/verify")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if resp.StatusCode() != 200 {
-		return fmt.Errorf("failed to authenticate: %s", resp.String())
+		return "", fmt.Errorf("failed to authenticate: %s", resp.String())
 	}
 
 	cookies := resp.Cookies()
 	c.client.SetCookies(cookies)
 
-	return nil
+	return resp.String(), nil
 }
