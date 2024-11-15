@@ -4,7 +4,7 @@ wget https://vrchatapi.github.io/specification/openapi.yaml -O openapi.yaml
 
 go install github.com/mayocream/openapi-codegen@latest
 
-openapi-codegen.exe -i ./openapi.yaml -o . -p vrchat
+openapi-codegen -i ./openapi.yaml -o . -p vrchat
 
 # Added UserAgent to NewClient function, otherwise it will return 403
 sed -i 's/func NewClient(baseURL string)/func NewClient(baseURL string, UserAgent string)/' ./client.gen.go
