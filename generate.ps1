@@ -65,6 +65,8 @@ func (c *Client) UpdateUser(userId UpdateUserParams, params UpdateUserRequest) (
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
 		jsonTag := typ.Field(i).Tag.Get("json")
+		// Split json tag by comma and get the first part
+		jsonTag = strings.Split(jsonTag, ",")[0]
 
 		// Skip empty fields
 		if !field.IsValid() || (field.Kind() == reflect.String && field.String() == "") ||
@@ -101,8 +103,8 @@ func (c *Client) UpdateUser(userId UpdateUserParams, params UpdateUserRequest) (
 
 	// Create request
 	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
+	// Set body
+	req.SetBody(queryParams)
 	// Set response object
 	var result CurrentUserResponse
 	req.SetResult(&result)
