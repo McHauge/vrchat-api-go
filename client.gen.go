@@ -19,6 +19,14 @@ func NewClient(baseURL, UserAgent string) *Client {
 	}
 }
 
+func (c *Client) GetClient() *resty.Client {
+	return c.client
+} 
+
+func (c *Client) SetClient(client *resty.Client) {
+	c.client = client
+}
+
 // CheckUserExistsParams represents the parameters for the CheckUserExists request
 type CheckUserExistsParams struct {
 	Email         string `json:"email"`
