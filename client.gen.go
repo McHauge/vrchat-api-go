@@ -1,9 +1,6 @@
 package vrchat
 
 import (
-    "strconv"
-    "reflect"    
-    "net/http"
 	"fmt"
 	"strings"
 	"time"
@@ -16,9 +13,9 @@ type Client struct {
 	client *resty.Client
 }
 
-func NewClient(baseURL string, UserAgent string) *Client {
+func NewClient(baseURL string) *Client {
 	return &Client{
-		client: resty.New().SetBaseURL(baseURL).SetHeader("User-Agent", UserAgent),
+		client: resty.New().SetBaseURL(baseURL),
 	}
 }
 
@@ -264,6 +261,28 @@ func (c *Client) GetOwnAvatar(params GetOwnAvatarParams) (*AvatarResponse, error
 	return &result, nil
 }
 
+func (c *Client) CreateAvatar() (*AvatarResponse, error) {
+	path := "/avatars"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result AvatarResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // SearchAvatarsParams represents the parameters for the SearchAvatars request
 type SearchAvatarsParams struct {
 	Featured        bool          `json:"featured"`
@@ -342,17 +361,27 @@ func (c *Client) SearchAvatars(params SearchAvatarsParams) (*AvatarListResponse,
 	return &result, nil
 }
 
-func (c *Client) CreateAvatar() (*AvatarResponse, error) {
-	path := "/avatars"
+// UpdateAvatarParams represents the parameters for the UpdateAvatar request
+type UpdateAvatarParams struct {
+	AvatarId string `json:"avatarId"`
+}
+
+func (c *Client) UpdateAvatar(params UpdateAvatarParams) (*AvatarResponse, error) {
+	path := "/avatars/{avatarId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{avatarId}", fmt.Sprintf("%v", params.AvatarId))
 
 	// Create request
 	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
 	// Set response object
 	var result AvatarResponse
 	req.SetResult(&result)
 
 	// Send request
-	resp, err := req.Post(path)
+	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -417,38 +446,6 @@ func (c *Client) GetAvatar(params GetAvatarParams) (*AvatarResponse, error) {
 
 	// Send request
 	resp, err := req.Get(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
-// UpdateAvatarParams represents the parameters for the UpdateAvatar request
-type UpdateAvatarParams struct {
-	AvatarId string `json:"avatarId"`
-}
-
-func (c *Client) UpdateAvatar(params UpdateAvatarParams) (*AvatarResponse, error) {
-	path := "/avatars/{avatarId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{avatarId}", fmt.Sprintf("%v", params.AvatarId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result AvatarResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -1671,38 +1668,6 @@ func (c *Client) UpdateGroup(params UpdateGroupParams) (*GroupResponse, error) {
 	return &result, nil
 }
 
-// DeleteGroupAnnouncementParams represents the parameters for the DeleteGroupAnnouncement request
-type DeleteGroupAnnouncementParams struct {
-	GroupId string `json:"groupId"`
-}
-
-func (c *Client) DeleteGroupAnnouncement(params DeleteGroupAnnouncementParams) (*DeleteGroupAnnouncementSuccess, error) {
-	path := "/groups/{groupId}/announcement"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result DeleteGroupAnnouncementSuccess
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Delete(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // GetGroupAnnouncementsParams represents the parameters for the GetGroupAnnouncements request
 type GetGroupAnnouncementsParams struct {
 	GroupId string `json:"groupId"`
@@ -1756,6 +1721,38 @@ func (c *Client) CreateGroupAnnouncement(params CreateGroupAnnouncementParams) (
 
 	// Send request
 	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// DeleteGroupAnnouncementParams represents the parameters for the DeleteGroupAnnouncement request
+type DeleteGroupAnnouncementParams struct {
+	GroupId string `json:"groupId"`
+}
+
+func (c *Client) DeleteGroupAnnouncement(params DeleteGroupAnnouncementParams) (*DeleteGroupAnnouncementSuccess, error) {
+	path := "/groups/{groupId}/announcement"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result DeleteGroupAnnouncementSuccess
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -1953,6 +1950,40 @@ func (c *Client) CreateGroupGallery(params CreateGroupGalleryParams) (*GroupGall
 	return &result, nil
 }
 
+// DeleteGroupGalleryParams represents the parameters for the DeleteGroupGallery request
+type DeleteGroupGalleryParams struct {
+	GroupId        string `json:"groupId"`
+	GroupGalleryId string `json:"groupGalleryId"`
+}
+
+func (c *Client) DeleteGroupGallery(params DeleteGroupGalleryParams) (*DeleteGroupGallerySuccess, error) {
+	path := "/groups/{groupId}/galleries/{groupGalleryId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{groupGalleryId}", fmt.Sprintf("%v", params.GroupGalleryId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result DeleteGroupGallerySuccess
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // GetGroupGalleryImagesParams represents the parameters for the GetGroupGalleryImages request
 type GetGroupGalleryImagesParams struct {
 	GroupId        string `json:"groupId"`
@@ -2018,40 +2049,6 @@ func (c *Client) UpdateGroupGallery(params UpdateGroupGalleryParams) (*GroupGall
 
 	// Send request
 	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
-// DeleteGroupGalleryParams represents the parameters for the DeleteGroupGallery request
-type DeleteGroupGalleryParams struct {
-	GroupId        string `json:"groupId"`
-	GroupGalleryId string `json:"groupGalleryId"`
-}
-
-func (c *Client) DeleteGroupGallery(params DeleteGroupGalleryParams) (*DeleteGroupGallerySuccess, error) {
-	path := "/groups/{groupId}/galleries/{groupGalleryId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
-	path = strings.ReplaceAll(path, "{groupGalleryId}", fmt.Sprintf("%v", params.GroupGalleryId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result DeleteGroupGallerySuccess
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Delete(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -2473,42 +2470,6 @@ func (c *Client) UpdateGroupMember(params UpdateGroupMemberParams) (*GroupLimite
 	return &result, nil
 }
 
-// AddGroupMemberRoleParams represents the parameters for the AddGroupMemberRole request
-type AddGroupMemberRoleParams struct {
-	GroupId     string `json:"groupId"`
-	UserId      string `json:"userId"`
-	GroupRoleId string `json:"groupRoleId"`
-}
-
-func (c *Client) AddGroupMemberRole(params AddGroupMemberRoleParams) (*GroupRoleIdListResponse, error) {
-	path := "/groups/{groupId}/members/{userId}/roles/{groupRoleId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
-	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
-	path = strings.ReplaceAll(path, "{groupRoleId}", fmt.Sprintf("%v", params.GroupRoleId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result GroupRoleIdListResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // RemoveGroupMemberRoleParams represents the parameters for the RemoveGroupMemberRole request
 type RemoveGroupMemberRoleParams struct {
 	GroupId     string `json:"groupId"`
@@ -2534,6 +2495,42 @@ func (c *Client) RemoveGroupMemberRole(params RemoveGroupMemberRoleParams) (*Gro
 
 	// Send request
 	resp, err := req.Delete(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// AddGroupMemberRoleParams represents the parameters for the AddGroupMemberRole request
+type AddGroupMemberRoleParams struct {
+	GroupId     string `json:"groupId"`
+	UserId      string `json:"userId"`
+	GroupRoleId string `json:"groupRoleId"`
+}
+
+func (c *Client) AddGroupMemberRole(params AddGroupMemberRoleParams) (*GroupRoleIdListResponse, error) {
+	path := "/groups/{groupId}/members/{userId}/roles/{groupRoleId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+	path = strings.ReplaceAll(path, "{groupRoleId}", fmt.Sprintf("%v", params.GroupRoleId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result GroupRoleIdListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -2881,40 +2878,6 @@ func (c *Client) CreateGroupRole(params CreateGroupRoleParams) (*GroupRoleRespon
 	return &result, nil
 }
 
-// UpdateGroupRoleParams represents the parameters for the UpdateGroupRole request
-type UpdateGroupRoleParams struct {
-	GroupId     string `json:"groupId"`
-	GroupRoleId string `json:"groupRoleId"`
-}
-
-func (c *Client) UpdateGroupRole(params UpdateGroupRoleParams) (*GroupRoleListResponse, error) {
-	path := "/groups/{groupId}/roles/{groupRoleId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
-	path = strings.ReplaceAll(path, "{groupRoleId}", fmt.Sprintf("%v", params.GroupRoleId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result GroupRoleListResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // DeleteGroupRoleParams represents the parameters for the DeleteGroupRole request
 type DeleteGroupRoleParams struct {
 	GroupId     string `json:"groupId"`
@@ -2938,6 +2901,40 @@ func (c *Client) DeleteGroupRole(params DeleteGroupRoleParams) (*GroupRoleListRe
 
 	// Send request
 	resp, err := req.Delete(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// UpdateGroupRoleParams represents the parameters for the UpdateGroupRole request
+type UpdateGroupRoleParams struct {
+	GroupId     string `json:"groupId"`
+	GroupRoleId string `json:"groupRoleId"`
+}
+
+func (c *Client) UpdateGroupRole(params UpdateGroupRoleParams) (*GroupRoleListResponse, error) {
+	path := "/groups/{groupId}/roles/{groupRoleId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{groupRoleId}", fmt.Sprintf("%v", params.GroupRoleId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result GroupRoleListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -3609,28 +3606,6 @@ func (c *Client) GetPermission(params GetPermissionParams) (*PermissionResponse,
 	return &result, nil
 }
 
-func (c *Client) ModerateUser() (*PlayerModerationResponse, error) {
-	path := "/auth/user/playermoderations"
-
-	// Create request
-	req := c.client.R()
-	// Set response object
-	var result PlayerModerationResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Post(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 func (c *Client) ClearAllPlayerModerations() (*PlayerModerationClearAllSuccess, error) {
 	path := "/auth/user/playermoderations"
 
@@ -3664,6 +3639,28 @@ func (c *Client) GetPlayerModerations() (*PlayerModerationListResponse, error) {
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+func (c *Client) ModerateUser() (*PlayerModerationResponse, error) {
+	path := "/auth/user/playermoderations"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result PlayerModerationResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -4078,6 +4075,34 @@ type UpdateUserParams struct {
 	UserId string `json:"userId"`
 }
 
+func (c *Client) UpdateUser(params UpdateUserParams) (*CurrentUserResponse, error) {
+	path := "/users/{userId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CurrentUserResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetUserGroupsParams represents the parameters for the GetUserGroups request
 type GetUserGroupsParams struct {
 	UserId string `json:"userId"`
 }
@@ -4170,6 +4195,28 @@ func (c *Client) GetUserRepresentedGroup(params GetUserRepresentedGroupParams) e
 	return nil
 }
 
+func (c *Client) CreateWorld() (*WorldResponse, error) {
+	path := "/worlds"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result WorldResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // SearchWorldsParams represents the parameters for the SearchWorlds request
 type SearchWorldsParams struct {
 	Featured        bool          `json:"featured"`
@@ -4245,28 +4292,6 @@ func (c *Client) SearchWorlds(params SearchWorldsParams) (*LimitedWorldListRespo
 
 	// Send request
 	resp, err := req.Get(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
-func (c *Client) CreateWorld() (*WorldResponse, error) {
-	path := "/worlds"
-
-	// Create request
-	req := c.client.R()
-	// Set response object
-	var result WorldResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Post(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -4520,38 +4545,6 @@ func (c *Client) GetRecentWorlds(params GetRecentWorldsParams) (*LimitedWorldLis
 	return &result, nil
 }
 
-// UpdateWorldParams represents the parameters for the UpdateWorld request
-type UpdateWorldParams struct {
-	WorldId string `json:"worldId"`
-}
-
-func (c *Client) UpdateWorld(params UpdateWorldParams) (*WorldResponse, error) {
-	path := "/worlds/{worldId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result WorldResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // DeleteWorldParams represents the parameters for the DeleteWorld request
 type DeleteWorldParams struct {
 	WorldId string `json:"worldId"`
@@ -4613,6 +4606,38 @@ func (c *Client) GetWorld(params GetWorldParams) (*WorldResponse, error) {
 	return &result, nil
 }
 
+// UpdateWorldParams represents the parameters for the UpdateWorld request
+type UpdateWorldParams struct {
+	WorldId string `json:"worldId"`
+}
+
+func (c *Client) UpdateWorld(params UpdateWorldParams) (*WorldResponse, error) {
+	path := "/worlds/{worldId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result WorldResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // GetWorldMetadataParams represents the parameters for the GetWorldMetadata request
 type GetWorldMetadataParams struct {
 	WorldId string `json:"worldId"`
@@ -4643,35 +4668,6 @@ func (c *Client) GetWorldMetadata(params GetWorldMetadataParams) (*WorldMetadata
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
 	}
 	return &result, nil
-}
-
-// PublishWorldParams represents the parameters for the PublishWorld request
-type PublishWorldParams struct {
-	WorldId string `json:"worldId"`
-}
-
-func (c *Client) PublishWorld(params PublishWorldParams) error {
-	path := "/worlds/{worldId}/publish"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return nil
 }
 
 // UnpublishWorldParams represents the parameters for the UnpublishWorld request
@@ -4735,6 +4731,35 @@ func (c *Client) GetWorldPublishStatus(params GetWorldPublishStatusParams) (*Wor
 	return &result, nil
 }
 
+// PublishWorldParams represents the parameters for the PublishWorld request
+type PublishWorldParams struct {
+	WorldId string `json:"worldId"`
+}
+
+func (c *Client) PublishWorld(params PublishWorldParams) error {
+	path := "/worlds/{worldId}/publish"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+
+	// Send request
+	resp, err := req.Put(path)
+	if err != nil {
+		return fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return nil
+}
+
 // GetWorldInstanceParams represents the parameters for the GetWorldInstance request
 type GetWorldInstanceParams struct {
 	WorldId    string `json:"worldId"`
@@ -4768,81 +4793,3 @@ func (c *Client) GetWorldInstance(params GetWorldInstanceParams) (*InstanceRespo
 	}
 	return &result, nil
 }
-
-func (c *Client) SetCookie(cookie *http.Cookie) {
-    c.client.SetCookie(cookie)
-}
-
-func (c *Client) GetCookies() []*http.Cookie {
-    return c.client.Cookies
-}
-
-func (c *Client) UpdateUser(userId UpdateUserParams, params UpdateUserRequest) (*CurrentUserResponse, error) {
-	path := "/users/{userId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-
-	// Iterate over the fields of the struct and add them to the queryParams
-	val := reflect.ValueOf(params)
-	typ := reflect.TypeOf(params)
-
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		jsonTag := typ.Field(i).Tag.Get("json")
-		// Split json tag by comma and get the first part
-		jsonTag = strings.Split(jsonTag, ",")[0]
-
-		// Skip empty fields
-		if !field.IsValid() || (field.Kind() == reflect.String && field.String() == "") ||
-			(field.Kind() == reflect.Slice && field.Len() == 0) ||
-			(field.Kind() == reflect.Bool && !field.Bool()) {
-			continue
-		}
-
-		// Adding field to queryParams
-		switch field.Kind() {
-		case reflect.String:
-			queryParams[jsonTag] = field.String()
-		case reflect.Slice:
-			if field.Len() > 0 {
-				// Handle string arrays like bioLinks or tags
-				var strSlice []string
-				for j := 0; j < field.Len(); j++ {
-					strSlice = append(strSlice, field.Index(j).String())
-				}
-				queryParams[jsonTag] = strings.Join(strSlice, ",")
-			}
-		case reflect.Bool:
-			queryParams[jsonTag] = strconv.FormatBool(field.Bool())
-		case reflect.Int64, reflect.Int:
-			queryParams[jsonTag] = fmt.Sprintf("%d", field.Int())
-		case reflect.Uint:
-			queryParams[jsonTag] = fmt.Sprintf("%d", field.Uint())
-		default:
-			panic("unhandled default case")
-		}
-	}
-
-	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", userId.UserId))
-
-	// Create request
-	req := c.client.R()
-	// Set body
-	req.SetBody(queryParams)
-	// Set response object
-	var result CurrentUserResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-

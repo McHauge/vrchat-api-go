@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/lyzcoote/vrchat-api-go"
 	"log"
+
+	"github.com/lyzcoote/vrchat-api-go"
 )
 
 func main() {
-	client := vrchat.NewClient("https://api.vrchat.cloud/api/1", "MyApp-Test/1.0")
+	client := vrchat.NewClient("https://api.vrchat.cloud/api/1")
 
 	resp, err := client.Authenticate("username", "password")
 	if err != nil {
