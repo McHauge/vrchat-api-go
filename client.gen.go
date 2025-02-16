@@ -4080,13 +4080,13 @@ func (c *Client) GetUser(params GetUserParams) (*UserResponse, error) {
 
 // UpdateUserParams represents the parameters for the UpdateUser request
 type UpdateUserParams struct {
-	Status            UserStatus `json:"status,omitempty"`
-	StatusDescription string     `json:"statusDescription,omitempty"`
-	Bio               string     `json:"bio,omitempty"`
-	BioLinks          []string   `json:"bioLinks,omitempty"`
+	Status            UserStatus `json:"status"`
+	StatusDescription string     `json:"statusDescription"`
+	Bio               string     `json:"bio"`
+	BioLinks          []string   `json:"bioLinks"`
 }
 
-func (c *Client) UpdateUser(userId string, params UpdateUserParams) (*CurrentUserResponse, error) {
+func (c *Client) UpdateUser(userId UserId, params UpdateUserParams) (*CurrentUserResponse, error) {
 	path := "/users/" + fmt.Sprintf("%v", userId)
 
 	// Replace path parameters and prepare query parameters
