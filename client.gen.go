@@ -21,7 +21,7 @@ func NewClient(baseURL, UserAgent string) *Client {
 
 func (c *Client) GetClient() *resty.Client {
 	return c.client
-} 
+}
 
 func (c *Client) SetClient(client *resty.Client) {
 	c.client = client
@@ -4080,14 +4080,29 @@ func (c *Client) GetUser(params GetUserParams) (*UserResponse, error) {
 
 // UpdateUserParams represents the parameters for the UpdateUser request
 type UpdateUserParams struct {
-	UserId string `json:"userId"`
+	Status            string   `json:"status,omitempty"`
+	StatusDescription string   `json:"statusDescription,omitempty"`
+	Bio               string   `json:"bio,omitempty"`
+	BioLinks          []string `json:"bioLinks,omitempty"`
 }
 
-func (c *Client) UpdateUser(params UpdateUserParams) (*CurrentUserResponse, error) {
-	path := "/users/{userId}"
+func (c *Client) UpdateUser(userId string, params UpdateUserParams) (*CurrentUserResponse, error) {
+	path := "/users/" + fmt.Sprintf("%v", userId)
+
 	// Replace path parameters and prepare query parameters
 	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+	if lo.IsNotEmpty(params.Status) {
+		queryParams["status"] = fmt.Sprintf("%v", params.Status)
+	}
+	if lo.IsNotEmpty(params.StatusDescription) {
+		queryParams["statusDescription"] = fmt.Sprintf("%v", params.StatusDescription)
+	}
+	if lo.IsNotEmpty(params.Bio) {
+		queryParams["bio"] = fmt.Sprintf("%v", params.Bio)
+	}
+	if len(params.BioLinks) > 0 {
+		queryParams["bioLinks"] = fmt.Sprintf("%v", params.BioLinks)
+	}
 
 	// Create request
 	req := c.client.R()
