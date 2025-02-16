@@ -4080,10 +4080,10 @@ func (c *Client) GetUser(params GetUserParams) (*UserResponse, error) {
 
 // UpdateUserParams represents the parameters for the UpdateUser request
 type UpdateUserParams struct {
-	Status            string   `json:"status,omitempty"`
-	StatusDescription string   `json:"statusDescription,omitempty"`
-	Bio               string   `json:"bio,omitempty"`
-	BioLinks          []string `json:"bioLinks,omitempty"`
+	Status            UserStatus `json:"status,omitempty"`
+	StatusDescription string     `json:"statusDescription,omitempty"`
+	Bio               string     `json:"bio,omitempty"`
+	BioLinks          []string   `json:"bioLinks,omitempty"`
 }
 
 func (c *Client) UpdateUser(userId string, params UpdateUserParams) (*CurrentUserResponse, error) {
