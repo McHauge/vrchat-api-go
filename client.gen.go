@@ -4080,14 +4080,15 @@ func (c *Client) GetUser(params GetUserParams) (*UserResponse, error) {
 
 // UpdateUserParams represents the parameters for the UpdateUser request
 type UpdateUserParams struct {
+	UserId            UserId     `json:"userId"`
 	Status            UserStatus `json:"status"`
 	StatusDescription string     `json:"statusDescription"`
 	Bio               string     `json:"bio"`
-	BioLinks          []string   `json:"bioLinks"`
 }
 
-func (c *Client) UpdateUser(userId UserId, params UpdateUserParams) (*CurrentUserResponse, error) {
-	path := "/users/" + fmt.Sprintf("%v", userId)
+func (c *Client) UpdateUser(params UpdateUserParams) (*CurrentUserResponse, error) {
+	path := "/users/{userId}"
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
 
 	// Replace path parameters and prepare query parameters
 	queryParams := make(map[string]string)
@@ -4100,14 +4101,11 @@ func (c *Client) UpdateUser(userId UserId, params UpdateUserParams) (*CurrentUse
 	if lo.IsNotEmpty(params.Bio) {
 		queryParams["bio"] = fmt.Sprintf("%v", params.Bio)
 	}
-	if len(params.BioLinks) > 0 {
-		queryParams["bioLinks"] = fmt.Sprintf("%v", params.BioLinks)
-	}
 
 	// Create request
 	req := c.client.R()
 	// Set query parameters
-	req.SetQueryParams(queryParams)
+	req.SetBody(queryParams)
 	// Set response object
 	var result CurrentUserResponse
 	req.SetResult(&result)

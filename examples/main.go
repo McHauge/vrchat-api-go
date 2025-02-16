@@ -11,7 +11,7 @@ import (
 func main() {
 	client := vrchat.NewClient("https://api.vrchat.cloud/api/1", "My-App-Name/1.0")
 
-	resp, err := client.Authenticate("username", "password")
+	resp, err := client.Authenticate("Username", "password")
 	if err != nil {
 		panic(err)
 	}
@@ -20,7 +20,7 @@ func main() {
 	if strings.Contains(resp, "requiresTwoFactorAuth") {
 		log.Println("2FA required, please enter code:")
 		if _, err := fmt.Scan(&authCode); err != nil {
-			panic(fmt.Sprintf("Unable to read 2FA code: %v",err))
+			panic(fmt.Sprintf("Unable to read 2FA code: %v", err))
 		}
 	}
 
@@ -37,5 +37,18 @@ func main() {
 		panic(err)
 	}
 
-	println("logged in as ", user.DisplayName)
+	println("logged in as ", user.DisplayName, user.Id)
+
+	update := vrchat.UpdateUserParams{
+		UserId:            user.Id,
+		Status:            vrchat.UserStatusActive,
+		StatusDescription: "I'm a bot",
+	}
+
+	resp1, err := client.UpdateUser(update)
+	if err != nil {
+		panic(err)
+	}
+	println(resp1.Status, resp1.StatusDescription)
+
 }
