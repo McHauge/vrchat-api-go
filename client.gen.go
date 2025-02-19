@@ -2795,19 +2795,29 @@ func (c *Client) GetGroupRequests(params GetGroupRequestsParams) (*GroupMemberLi
 type RespondGroupJoinRequestParams struct {
 	GroupId string `json:"groupId"`
 	UserId  string `json:"userId"`
+	Action  string `json:"action"` // Accept/Deny
+	Block   bool   `json:"block"`
 }
 
 func (c *Client) RespondGroupJoinRequest(params RespondGroupJoinRequestParams) error {
 	path := "/groups/{groupId}/requests/{userId}"
 	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
+	bodyParams := make(map[string]string)
 	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
 	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+
+	if lo.IsNotEmpty(params.Action) {
+		bodyParams["action"] = fmt.Sprintf("%v", params.Action)
+	}
+	if lo.IsNotEmpty(params.Block) {
+		bodyParams["block"] = fmt.Sprintf("%v", params.Block)
+	}
+
 
 	// Create request
 	req := c.client.R()
 	// Set query parameters
-	req.SetQueryParams(queryParams)
+	req.SetBody(bodyParams)
 
 	// Send request
 	resp, err := req.Put(path)
@@ -4091,21 +4101,21 @@ func (c *Client) UpdateUser(params UpdateUserParams) (*CurrentUserResponse, erro
 	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
 
 	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
+	bodyParams := make(map[string]string)
 	if lo.IsNotEmpty(params.Status) {
-		queryParams["status"] = fmt.Sprintf("%v", params.Status)
+		bodyParams["status"] = fmt.Sprintf("%v", params.Status)
 	}
 	if lo.IsNotEmpty(params.StatusDescription) {
-		queryParams["statusDescription"] = fmt.Sprintf("%v", params.StatusDescription)
+		bodyParams["statusDescription"] = fmt.Sprintf("%v", params.StatusDescription)
 	}
 	if lo.IsNotEmpty(params.Bio) {
-		queryParams["bio"] = fmt.Sprintf("%v", params.Bio)
+		bodyParams["bio"] = fmt.Sprintf("%v", params.Bio)
 	}
 
 	// Create request
 	req := c.client.R()
 	// Set query parameters
-	req.SetBody(queryParams)
+	req.SetBody(bodyParams)
 	// Set response object
 	var result CurrentUserResponse
 	req.SetResult(&result)
