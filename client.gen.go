@@ -2793,31 +2793,20 @@ func (c *Client) GetGroupRequests(params GetGroupRequestsParams) (*GroupMemberLi
 
 // RespondGroupJoinRequestParams represents the parameters for the RespondGroupJoinRequest request
 type RespondGroupJoinRequestParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
-	Action  string `json:"action"` // Accept/Deny
-	Block   bool   `json:"block"`
+	GroupId string                  `json:"groupId"`
+	UserId  string                  `json:"userId"`
 }
 
-func (c *Client) RespondGroupJoinRequest(params RespondGroupJoinRequestParams) error {
+func (c *Client) RespondGroupJoinRequest(params RespondGroupJoinRequestParams, body RespondGroupJoinRequest) error {
 	path := "/groups/{groupId}/requests/{userId}"
 	// Replace path parameters and prepare query parameters
-	bodyParams := make(map[string]string)
 	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
 	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
-
-	if lo.IsNotEmpty(params.Action) {
-		bodyParams["action"] = fmt.Sprintf("%v", params.Action)
-	}
-	if lo.IsNotEmpty(params.Block) {
-		bodyParams["block"] = fmt.Sprintf("%v", params.Block)
-	}
-
 
 	// Create request
 	req := c.client.R()
 	// Set query parameters
-	req.SetBody(bodyParams)
+	req.SetBody(body)
 
 	// Send request
 	resp, err := req.Put(path)
