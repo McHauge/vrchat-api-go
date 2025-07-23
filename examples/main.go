@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/lyzcoote/vrchat-api-go"
+	"github.com/mchauge/vrchat-api-go"
 )
 
 func main() {

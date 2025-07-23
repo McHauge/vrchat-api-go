@@ -1,4 +1,4 @@
-module github.com/lyzcoote/vrchat-api-go
+module github.com/mchauge/vrchat-api-go
 
 go 1.24.4
 
