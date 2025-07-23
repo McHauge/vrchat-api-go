@@ -39,13 +39,12 @@ func main() {
 
 	println("logged in as ", user.DisplayName, user.Id)
 
-	update := vrchat.UpdateUserParams{
-		UserId:            user.Id,
-		Status:            vrchat.UserStatusActive,
+	user_data := vrchat.UpdateUserRequest{
+		Status: vrchat.UserStatusActive,
 		StatusDescription: "I'm a bot",
 	}
 
-	resp1, err := client.UpdateUser(update)
+	resp1, err := client.UpdateUser(vrchat.UpdateUserParams{UserId: string(user.Id)}, user_data)
 	if err != nil {
 		panic(err)
 	}

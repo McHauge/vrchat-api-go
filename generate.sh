@@ -1,10 +1,21 @@
 #!/bin/bash
 
-wget https://vrchatapi.github.io/specification/openapi.yaml -O openapi.yaml
+# If you have Wget
+# wget https://vrchat.community/openapi.yaml -O openapi.yaml
 
-go install github.com/mayocream/openapi-codegen@latest
+# If you have Curl
+# curl.exe --output openapi.yaml --url https://vrchat.community/openapi.yaml
 
-openapi-codegen -i ./openapi.yaml -o . -p vrchat
+# Old Style generator
+go install github.com/mchauge/openapi-codegen@latest
+openapi-codegen -i ./openapi.yaml -o . -p vrchat -f=false
+
+# fix Schema fail with Group_All
+sed -i -E 's/GroupPermissions GroupPermissions/GroupPermissionsAll GroupPermissions/' ./schema.gen.go
+
+# Format code and schema
+go fmt client.gen.go
+go fmt schema.gen.go
 
 # Added UserAgent to NewClient function, otherwise it will return 403
 sed -i 's/func NewClient(baseURL string)/func NewClient(baseURL string, UserAgent string)/' ./client.gen.go
