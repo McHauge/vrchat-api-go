@@ -13142,21 +13142,21 @@ components:
       in: query
       required: false
       schema:
-        type: string
+        $ref: '#/components/schemas/UserID'
       description: Exclude by UserID.
     userId:
       name: userId
       in: path
       required: true
       schema:
-        type: string
+        $ref: '#/components/schemas/UserID'
       description: Must be a valid user ID.
     confirmEmailUserId:
       name: id
       in: query
       required: true
       schema:
-        type: string
+        $ref: '#/components/schemas/UserID'
         example: usr_00000000-0000-0000-0000-000000000000
       description: Target user for which to verify email.
     confirmEmailToken:
@@ -13172,7 +13172,7 @@ components:
       in: query
       required: false
       schema:
-        type: string
+        $ref: '#/components/schemas/UserID'
       description: Filter by UserID.
     verifyLoginPlaceToken:
       name: token
@@ -13281,7 +13281,7 @@ components:
       in: query
       required: false
       schema:
-        type: string
+        $ref: '#/components/schemas/UserID'
       description: Target user to see information on, admin-only.
     transactionId:
       name: transactionId

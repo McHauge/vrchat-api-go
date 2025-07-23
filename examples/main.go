@@ -44,7 +44,7 @@ func main() {
 		StatusDescription: "I'm a bot",
 	}
 
-	resp1, err := client.UpdateUser(vrchat.UpdateUserParams{UserId: string(user.Id)}, user_data)
+	resp1, err := client.UpdateUser(vrchat.UpdateUserParams{UserId: user.Id}, user_data)
 	if err != nil {
 		panic(err)
 	}

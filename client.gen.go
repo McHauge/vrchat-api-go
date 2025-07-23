@@ -26,8 +26,8 @@ func NewClient(baseURL string, UserAgent string) *Client {
 type CheckUserExistsParams struct {
 	Email         string `json:"email"`
 	DisplayName   string `json:"displayName"`
-	Username      string `json:"username"`
-	ExcludeUserId string `json:"excludeUserId"`
+	Username      string `json:"username"` // ExcludeUserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	ExcludeUserId UserId `json:"excludeUserId"`
 }
 
 func (c *Client) CheckUserExists(params CheckUserExistsParams) (*UserExistsResponse, error) {
@@ -134,28 +134,6 @@ func (c *Client) Verify2Fa() (*Verify2FaResponse, error) {
 	return &result, nil
 }
 
-func (c *Client) CancelPending2Fa() (*Disable2FaResponse, error) {
-	path := "/auth/twofactorauth/totp/pending"
-
-	// Create request
-	req := c.client.R()
-	// Set response object
-	var result Disable2FaResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Delete(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 func (c *Client) Enable2Fa() (*Pending2FaResponse, error) {
 	path := "/auth/twofactorauth/totp/pending"
 
@@ -167,6 +145,28 @@ func (c *Client) Enable2Fa() (*Pending2FaResponse, error) {
 
 	// Send request
 	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+func (c *Client) CancelPending2Fa() (*Disable2FaResponse, error) {
+	path := "/auth/twofactorauth/totp/pending"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result Disable2FaResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -311,8 +311,8 @@ func (c *Client) Logout() (*LogoutSuccess, error) {
 }
 
 // DeleteUserParams represents the parameters for the DeleteUser request
-type DeleteUserParams struct {
-	UserId string `json:"userId"`
+type DeleteUserParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) DeleteUser(params DeleteUserParams) (*DeleteUserResponse, error) {
@@ -387,8 +387,8 @@ func (c *Client) ResendEmailConfirmation() (*ResendVerificationEmailSuccess, err
 }
 
 // ConfirmEmailParams represents the parameters for the ConfirmEmail request
-type ConfirmEmailParams struct {
-	Id          string `json:"id"`
+type ConfirmEmailParams struct { // Id A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	Id          UserId `json:"id"`
 	VerifyEmail string `json:"verify_email"`
 }
 
@@ -422,8 +422,8 @@ func (c *Client) ConfirmEmail(params ConfirmEmailParams) error {
 }
 
 // VerifyLoginPlaceParams represents the parameters for the VerifyLoginPlace request
-type VerifyLoginPlaceParams struct {
-	UserId string `json:"userId"`
+type VerifyLoginPlaceParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 	Token  string `json:"token"`
 }
 
@@ -457,8 +457,8 @@ func (c *Client) VerifyLoginPlace(params VerifyLoginPlaceParams) error {
 }
 
 // GetOwnAvatarParams represents the parameters for the GetOwnAvatar request
-type GetOwnAvatarParams struct {
-	UserId string `json:"userId"`
+type GetOwnAvatarParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetOwnAvatar(params GetOwnAvatarParams) (*AvatarResponse, error) {
@@ -491,8 +491,8 @@ func (c *Client) GetOwnAvatar(params GetOwnAvatarParams) (*AvatarResponse, error
 // SearchAvatarsParams represents the parameters for the SearchAvatars request
 type SearchAvatarsParams struct {
 	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"`
-	UserId   string      `json:"userId"`
+	Sort     SortOption  `json:"sort"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId   UserId      `json:"userId"`
 	N        int64       `json:"n"`
 	Order    OrderOption `json:"order"`
 	Offset   int64       `json:"offset"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
@@ -791,8 +791,8 @@ type GetFavoritedAvatarsParams struct {
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
 	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`
-	UserId          string        `json:"userId"`
+	Platform        Platform      `json:"platform"`        // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId          UserId        `json:"userId"`
 }
 
 func (c *Client) GetFavoritedAvatars(params GetFavoritedAvatarsParams) (*AvatarListResponse, error) {
@@ -1148,8 +1148,8 @@ func (c *Client) GetProductListing(params GetProductListingParams) (*ProductList
 }
 
 // GetProductListingsParams represents the parameters for the GetProductListings request
-type GetProductListingsParams struct {
-	UserId  string `json:"userId"`
+type GetProductListingsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 	N       int64  `json:"n"`
 	Offset  int64  `json:"offset"`
 	Hydrate bool   `json:"hydrate"`
@@ -1244,8 +1244,8 @@ func (c *Client) GetTiliaStatus() (*TiliaStatusResponse, error) {
 }
 
 // GetTiliaTosParams represents the parameters for the GetTiliaTos request
-type GetTiliaTosParams struct {
-	UserId string `json:"userId"`
+type GetTiliaTosParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetTiliaTos(params GetTiliaTosParams) (*TiliaTosResponse, error) {
@@ -1276,8 +1276,8 @@ func (c *Client) GetTiliaTos(params GetTiliaTosParams) (*TiliaTosResponse, error
 }
 
 // GetBalanceParams represents the parameters for the GetBalance request
-type GetBalanceParams struct {
-	UserId string `json:"userId"`
+type GetBalanceParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetBalance(params GetBalanceParams) (*BalanceResponse, error) {
@@ -1408,8 +1408,8 @@ func (c *Client) RemoveFavorite(params RemoveFavoriteParams) (*FavoriteRemovedSu
 // GetFavoriteGroupsParams represents the parameters for the GetFavoriteGroups request
 type GetFavoriteGroupsParams struct {
 	N      int64  `json:"n"`
-	Offset int64  `json:"offset"`
-	UserId string `json:"userId"`
+	Offset int64  `json:"offset"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetFavoriteGroups(params GetFavoriteGroupsParams) (*FavoriteGroupListResponse, error) {
@@ -1451,8 +1451,8 @@ func (c *Client) GetFavoriteGroups(params GetFavoriteGroupsParams) (*FavoriteGro
 type UpdateFavoriteGroupParams struct {
 	// FavoriteGroupType enum
 	FavoriteGroupType string `json:"favoriteGroupType"`
-	FavoriteGroupName string `json:"favoriteGroupName"`
-	UserId            string `json:"userId"`
+	FavoriteGroupName string `json:"favoriteGroupName"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId            UserId `json:"userId"`
 }
 
 func (c *Client) UpdateFavoriteGroup(params UpdateFavoriteGroupParams) error {
@@ -1485,8 +1485,8 @@ func (c *Client) UpdateFavoriteGroup(params UpdateFavoriteGroupParams) error {
 type ClearFavoriteGroupParams struct {
 	// FavoriteGroupType enum
 	FavoriteGroupType string `json:"favoriteGroupType"`
-	FavoriteGroupName string `json:"favoriteGroupName"`
-	UserId            string `json:"userId"`
+	FavoriteGroupName string `json:"favoriteGroupName"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId            UserId `json:"userId"`
 }
 
 func (c *Client) ClearFavoriteGroup(params ClearFavoriteGroupParams) (*FavoriteGroupClearedSuccess, error) {
@@ -1522,8 +1522,8 @@ func (c *Client) ClearFavoriteGroup(params ClearFavoriteGroupParams) (*FavoriteG
 type GetFavoriteGroupParams struct {
 	// FavoriteGroupType enum
 	FavoriteGroupType string `json:"favoriteGroupType"`
-	FavoriteGroupName string `json:"favoriteGroupName"`
-	UserId            string `json:"userId"`
+	FavoriteGroupName string `json:"favoriteGroupName"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId            UserId `json:"userId"`
 }
 
 func (c *Client) GetFavoriteGroup(params GetFavoriteGroupParams) (*FavoriteGroupResponse, error) {
@@ -2154,41 +2154,9 @@ func (c *Client) GetFriends(params GetFriendsParams) (*LimitedUserFriendListResp
 	return &result, nil
 }
 
-// DeleteFriendRequestParams represents the parameters for the DeleteFriendRequest request
-type DeleteFriendRequestParams struct {
-	UserId string `json:"userId"`
-}
-
-func (c *Client) DeleteFriendRequest(params DeleteFriendRequestParams) (*DeleteFriendSuccess, error) {
-	path := "/user/{userId}/friendRequest"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result DeleteFriendSuccess
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Delete(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // FriendParams represents the parameters for the Friend request
-type FriendParams struct {
-	UserId string `json:"userId"`
+type FriendParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) Friend(params FriendParams) (*NotificationResponse, error) {
@@ -2218,9 +2186,41 @@ func (c *Client) Friend(params FriendParams) (*NotificationResponse, error) {
 	return &result, nil
 }
 
+// DeleteFriendRequestParams represents the parameters for the DeleteFriendRequest request
+type DeleteFriendRequestParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
+}
+
+func (c *Client) DeleteFriendRequest(params DeleteFriendRequestParams) (*DeleteFriendSuccess, error) {
+	path := "/user/{userId}/friendRequest"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result DeleteFriendSuccess
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // GetFriendStatusParams represents the parameters for the GetFriendStatus request
-type GetFriendStatusParams struct {
-	UserId string `json:"userId"`
+type GetFriendStatusParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetFriendStatus(params GetFriendStatusParams) (*FriendStatusResponse, error) {
@@ -2251,8 +2251,8 @@ func (c *Client) GetFriendStatus(params GetFriendStatusParams) (*FriendStatusRes
 }
 
 // UnfriendParams represents the parameters for the Unfriend request
-type UnfriendParams struct {
-	UserId string `json:"userId"`
+type UnfriendParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) Unfriend(params UnfriendParams) (*UnfriendSuccess, error) {
@@ -2364,38 +2364,6 @@ func (c *Client) GetGroupRoleTemplates() (*GroupRoleTemplatesResponse, error) {
 	return &result, nil
 }
 
-// UpdateGroupParams represents the parameters for the UpdateGroup request
-type UpdateGroupParams struct {
-	GroupId string `json:"groupId"`
-}
-
-func (c *Client) UpdateGroup(params UpdateGroupParams) (*GroupResponse, error) {
-	path := "/groups/{groupId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result GroupResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // DeleteGroupParams represents the parameters for the DeleteGroup request
 type DeleteGroupParams struct {
 	GroupId string `json:"groupId"`
@@ -2449,6 +2417,38 @@ func (c *Client) GetGroup(params GetGroupParams) (*GroupResponse, error) {
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// UpdateGroupParams represents the parameters for the UpdateGroup request
+type UpdateGroupParams struct {
+	GroupId string `json:"groupId"`
+}
+
+func (c *Client) UpdateGroup(params UpdateGroupParams) (*GroupResponse, error) {
+	path := "/groups/{groupId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result GroupResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -2690,8 +2690,8 @@ func (c *Client) BanGroupMember(params BanGroupMemberParams) (*GroupMemberRespon
 
 // UnbanGroupMemberParams represents the parameters for the UnbanGroupMember request
 type UnbanGroupMemberParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
+	GroupId string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 }
 
 func (c *Client) UnbanGroupMember(params UnbanGroupMemberParams) (*GroupMemberResponse, error) {
@@ -3037,8 +3037,8 @@ func (c *Client) CreateGroupInvite(params CreateGroupInviteParams) error {
 
 // DeleteGroupInviteParams represents the parameters for the DeleteGroupInvite request
 type DeleteGroupInviteParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
+	GroupId string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 }
 
 func (c *Client) DeleteGroupInvite(params DeleteGroupInviteParams) error {
@@ -3177,8 +3177,8 @@ func (c *Client) GetGroupMembers(params GetGroupMembersParams) (*GroupMemberList
 
 // KickGroupMemberParams represents the parameters for the KickGroupMember request
 type KickGroupMemberParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
+	GroupId string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 }
 
 func (c *Client) KickGroupMember(params KickGroupMemberParams) error {
@@ -3208,8 +3208,8 @@ func (c *Client) KickGroupMember(params KickGroupMemberParams) error {
 
 // GetGroupMemberParams represents the parameters for the GetGroupMember request
 type GetGroupMemberParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
+	GroupId string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 }
 
 func (c *Client) GetGroupMember(params GetGroupMemberParams) (*GroupLimitedMemberResponse, error) {
@@ -3242,8 +3242,8 @@ func (c *Client) GetGroupMember(params GetGroupMemberParams) (*GroupLimitedMembe
 
 // UpdateGroupMemberParams represents the parameters for the UpdateGroupMember request
 type UpdateGroupMemberParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
+	GroupId string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 }
 
 func (c *Client) UpdateGroupMember(params UpdateGroupMemberParams) (*GroupLimitedMemberResponse, error) {
@@ -3276,8 +3276,8 @@ func (c *Client) UpdateGroupMember(params UpdateGroupMemberParams) (*GroupLimite
 
 // RemoveGroupMemberRoleParams represents the parameters for the RemoveGroupMemberRole request
 type RemoveGroupMemberRoleParams struct {
-	GroupId     string `json:"groupId"`
-	UserId      string `json:"userId"`
+	GroupId     string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId      UserId `json:"userId"`
 	GroupRoleId string `json:"groupRoleId"`
 }
 
@@ -3312,8 +3312,8 @@ func (c *Client) RemoveGroupMemberRole(params RemoveGroupMemberRoleParams) (*Gro
 
 // AddGroupMemberRoleParams represents the parameters for the AddGroupMemberRole request
 type AddGroupMemberRoleParams struct {
-	GroupId     string `json:"groupId"`
-	UserId      string `json:"userId"`
+	GroupId     string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId      UserId `json:"userId"`
 	GroupRoleId string `json:"groupRoleId"`
 }
 
@@ -3621,8 +3621,8 @@ func (c *Client) GetGroupRequests(params GetGroupRequestsParams) (*GroupMemberLi
 
 // RespondGroupJoinRequestParams represents the parameters for the RespondGroupJoinRequest request
 type RespondGroupJoinRequestParams struct {
-	GroupId string `json:"groupId"`
-	UserId  string `json:"userId"`
+	GroupId string `json:"groupId"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 }
 
 func (c *Client) RespondGroupJoinRequest(params RespondGroupJoinRequestParams) error {
@@ -3962,8 +3962,8 @@ func (c *Client) SpawnInventoryItem(params SpawnInventoryItemParams) (*Inventory
 }
 
 // InviteUserParams represents the parameters for the InviteUser request
-type InviteUserParams struct {
-	UserId string `json:"userId"`
+type InviteUserParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) InviteUser(params InviteUserParams) (*SendNotificationResponse, error) {
@@ -3994,8 +3994,8 @@ func (c *Client) InviteUser(params InviteUserParams) (*SendNotificationResponse,
 }
 
 // InviteUserWithPhotoParams represents the parameters for the InviteUserWithPhoto request
-type InviteUserWithPhotoParams struct {
-	UserId string `json:"userId"`
+type InviteUserWithPhotoParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) InviteUserWithPhoto(params InviteUserWithPhotoParams) (*SendNotificationResponse, error) {
@@ -4060,8 +4060,8 @@ func (c *Client) InviteMyselfTo(params InviteMyselfToParams) (*SendNotificationR
 }
 
 // RequestInviteParams represents the parameters for the RequestInvite request
-type RequestInviteParams struct {
-	UserId string `json:"userId"`
+type RequestInviteParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) RequestInvite(params RequestInviteParams) (*NotificationResponse, error) {
@@ -4092,8 +4092,8 @@ func (c *Client) RequestInvite(params RequestInviteParams) (*NotificationRespons
 }
 
 // RequestInviteWithPhotoParams represents the parameters for the RequestInviteWithPhoto request
-type RequestInviteWithPhotoParams struct {
-	UserId string `json:"userId"`
+type RequestInviteWithPhotoParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) RequestInviteWithPhoto(params RequestInviteWithPhotoParams) (*NotificationResponse, error) {
@@ -4188,8 +4188,8 @@ func (c *Client) RespondInviteWithPhoto(params RespondInviteWithPhotoParams) (*N
 }
 
 // GetInviteMessagesParams represents the parameters for the GetInviteMessages request
-type GetInviteMessagesParams struct {
-	UserId      string            `json:"userId"`
+type GetInviteMessagesParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId      UserId            `json:"userId"`
 	MessageType InviteMessageType `json:"messageType"`
 }
 
@@ -4222,8 +4222,8 @@ func (c *Client) GetInviteMessages(params GetInviteMessagesParams) (*InviteMessa
 }
 
 // ResetInviteMessageParams represents the parameters for the ResetInviteMessage request
-type ResetInviteMessageParams struct {
-	UserId      string            `json:"userId"`
+type ResetInviteMessageParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId      UserId            `json:"userId"`
 	MessageType InviteMessageType `json:"messageType"`
 	Slot        int64             `json:"slot"`
 }
@@ -4258,8 +4258,8 @@ func (c *Client) ResetInviteMessage(params ResetInviteMessageParams) (*InviteMes
 }
 
 // GetInviteMessageParams represents the parameters for the GetInviteMessage request
-type GetInviteMessageParams struct {
-	UserId      string            `json:"userId"`
+type GetInviteMessageParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId      UserId            `json:"userId"`
 	MessageType InviteMessageType `json:"messageType"`
 	Slot        int64             `json:"slot"`
 }
@@ -4294,8 +4294,8 @@ func (c *Client) GetInviteMessage(params GetInviteMessageParams) (*InviteMessage
 }
 
 // UpdateInviteMessageParams represents the parameters for the UpdateInviteMessage request
-type UpdateInviteMessageParams struct {
-	UserId      string            `json:"userId"`
+type UpdateInviteMessageParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId      UserId            `json:"userId"`
 	MessageType InviteMessageType `json:"messageType"`
 	Slot        int64             `json:"slot"`
 }
@@ -4351,40 +4351,6 @@ func (c *Client) CreateInstance() (*InstanceResponse, error) {
 	return &result, nil
 }
 
-// CloseInstanceParams represents the parameters for the CloseInstance request
-type CloseInstanceParams struct {
-	WorldId    string `json:"worldId"`
-	InstanceId string `json:"instanceId"`
-}
-
-func (c *Client) CloseInstance(params CloseInstanceParams) (*InstanceResponse, error) {
-	path := "/instances/{worldId}:{instanceId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
-	path = strings.ReplaceAll(path, "{instanceId}", fmt.Sprintf("%v", params.InstanceId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result InstanceResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Delete(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // GetInstanceParams represents the parameters for the GetInstance request
 type GetInstanceParams struct {
 	WorldId    string `json:"worldId"`
@@ -4408,6 +4374,40 @@ func (c *Client) GetInstance(params GetInstanceParams) (*InstanceResponse, error
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// CloseInstanceParams represents the parameters for the CloseInstance request
+type CloseInstanceParams struct {
+	WorldId    string `json:"worldId"`
+	InstanceId string `json:"instanceId"`
+}
+
+func (c *Client) CloseInstance(params CloseInstanceParams) (*InstanceResponse, error) {
+	path := "/instances/{worldId}:{instanceId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
+	path = strings.ReplaceAll(path, "{instanceId}", fmt.Sprintf("%v", params.InstanceId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result InstanceResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -4752,8 +4752,8 @@ func (c *Client) UnmoderateUser() (*PlayerModerationUnmoderatedSuccess, error) {
 }
 
 // GetUserPrintsParams represents the parameters for the GetUserPrints request
-type GetUserPrintsParams struct {
-	UserId string `json:"userId"`
+type GetUserPrintsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetUserPrints(params GetUserPrintsParams) (*PrintListResponse, error) {
@@ -5077,8 +5077,8 @@ func (c *Client) GetUserByName() (*UserResponse, error) {
 }
 
 // GetUserParams represents the parameters for the GetUser request
-type GetUserParams struct {
-	UserId string `json:"userId"`
+type GetUserParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetUser(params GetUserParams) (*UserResponse, error) {
@@ -5109,14 +5109,14 @@ func (c *Client) GetUser(params GetUserParams) (*UserResponse, error) {
 }
 
 // UpdateUserParams represents the parameters for the UpdateUser request
-type UpdateUserParams struct {
-	UserId string `json:"userId"`
+type UpdateUserParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 
 // GetUserGroupsParams represents the parameters for the GetUserGroups request
-type GetUserGroupsParams struct {
-	UserId string `json:"userId"`
+type GetUserGroupsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetUserGroups(params GetUserGroupsParams) (*LimitedUserGroupListResponse, error) {
@@ -5147,8 +5147,8 @@ func (c *Client) GetUserGroups(params GetUserGroupsParams) (*LimitedUserGroupLis
 }
 
 // GetUserGroupRequestsParams represents the parameters for the GetUserGroupRequests request
-type GetUserGroupRequestsParams struct {
-	UserId string `json:"userId"`
+type GetUserGroupRequestsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetUserGroupRequests(params GetUserGroupRequestsParams) (*GroupListResponse, error) {
@@ -5179,8 +5179,8 @@ func (c *Client) GetUserGroupRequests(params GetUserGroupRequestsParams) (*Group
 }
 
 // GetUserRepresentedGroupParams represents the parameters for the GetUserRepresentedGroup request
-type GetUserRepresentedGroupParams struct {
-	UserId string `json:"userId"`
+type GetUserRepresentedGroupParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetUserRepresentedGroup(params GetUserRepresentedGroupParams) error {
@@ -5208,8 +5208,8 @@ func (c *Client) GetUserRepresentedGroup(params GetUserRepresentedGroupParams) e
 }
 
 // GetUserFeedbackParams represents the parameters for the GetUserFeedback request
-type GetUserFeedbackParams struct {
-	UserId    string `json:"userId"`
+type GetUserFeedbackParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId    UserId `json:"userId"`
 	ContentId bool   `json:"contentId"`
 	N         int64  `json:"n"`
 	Offset    int64  `json:"offset"`
@@ -5344,8 +5344,8 @@ func (c *Client) GetUserNote(params GetUserNoteParams) (*UserNoteResponse, error
 }
 
 // AddTagsParams represents the parameters for the AddTags request
-type AddTagsParams struct {
-	UserId string `json:"userId"`
+type AddTagsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) AddTags(params AddTagsParams) (*CurrentUserResponse, error) {
@@ -5376,8 +5376,8 @@ func (c *Client) AddTags(params AddTagsParams) (*CurrentUserResponse, error) {
 }
 
 // RemoveTagsParams represents the parameters for the RemoveTags request
-type RemoveTagsParams struct {
-	UserId string `json:"userId"`
+type RemoveTagsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) RemoveTags(params RemoveTagsParams) (*CurrentUserResponse, error) {
@@ -5408,8 +5408,8 @@ func (c *Client) RemoveTags(params RemoveTagsParams) (*CurrentUserResponse, erro
 }
 
 // UpdateBadgeParams represents the parameters for the UpdateBadge request
-type UpdateBadgeParams struct {
-	UserId  string `json:"userId"`
+type UpdateBadgeParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 	BadgeId string `json:"badgeId"`
 }
 
@@ -5439,8 +5439,8 @@ func (c *Client) UpdateBadge(params UpdateBadgeParams) error {
 }
 
 // GetUserGroupInstancesParams represents the parameters for the GetUserGroupInstances request
-type GetUserGroupInstancesParams struct {
-	UserId string `json:"userId"`
+type GetUserGroupInstancesParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
 }
 
 func (c *Client) GetUserGroupInstances(params GetUserGroupInstancesParams) (*UserGroupInstanceListResponse, error) {
@@ -5471,8 +5471,8 @@ func (c *Client) GetUserGroupInstances(params GetUserGroupInstancesParams) (*Use
 }
 
 // CheckUserPersistenceExistsParams represents the parameters for the CheckUserPersistenceExists request
-type CheckUserPersistenceExistsParams struct {
-	UserId  string `json:"userId"`
+type CheckUserPersistenceExistsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 	WorldId string `json:"worldId"`
 }
 
@@ -5502,8 +5502,8 @@ func (c *Client) CheckUserPersistenceExists(params CheckUserPersistenceExistsPar
 }
 
 // DeleteUserPersistenceParams represents the parameters for the DeleteUserPersistence request
-type DeleteUserPersistenceParams struct {
-	UserId  string `json:"userId"`
+type DeleteUserPersistenceParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
 	WorldId string `json:"worldId"`
 }
 
@@ -5532,33 +5532,11 @@ func (c *Client) DeleteUserPersistence(params DeleteUserPersistenceParams) error
 	return nil
 }
 
-func (c *Client) CreateWorld() (*WorldResponse, error) {
-	path := "/worlds"
-
-	// Create request
-	req := c.client.R()
-	// Set response object
-	var result WorldResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Post(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // SearchWorldsParams represents the parameters for the SearchWorlds request
 type SearchWorldsParams struct {
 	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"`
-	UserId   string      `json:"userId"`
+	Sort     SortOption  `json:"sort"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId   UserId      `json:"userId"`
 	N        int64       `json:"n"`
 	Order    OrderOption `json:"order"`
 	Offset   int64       `json:"offset"`
@@ -5633,6 +5611,28 @@ func (c *Client) SearchWorlds(params SearchWorldsParams) (*LimitedWorldListRespo
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+func (c *Client) CreateWorld() (*WorldResponse, error) {
+	path := "/worlds"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result WorldResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -5743,8 +5743,8 @@ type GetFavoritedWorldsParams struct {
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
 	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`
-	UserId          string        `json:"userId"`
+	Platform        Platform      `json:"platform"`        // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId          UserId        `json:"userId"`
 }
 
 func (c *Client) GetFavoritedWorlds(params GetFavoritedWorldsParams) (*FavoritedWorldListResponse, error) {
@@ -5829,8 +5829,8 @@ type GetRecentWorldsParams struct {
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
 	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`
-	UserId          string        `json:"userId"`
+	Platform        Platform      `json:"platform"`        // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId          UserId        `json:"userId"`
 }
 
 func (c *Client) GetRecentWorlds(params GetRecentWorldsParams) (*LimitedWorldListResponse, error) {
@@ -5898,38 +5898,6 @@ func (c *Client) GetRecentWorlds(params GetRecentWorldsParams) (*LimitedWorldLis
 	return &result, nil
 }
 
-// UpdateWorldParams represents the parameters for the UpdateWorld request
-type UpdateWorldParams struct {
-	WorldId string `json:"worldId"`
-}
-
-func (c *Client) UpdateWorld(params UpdateWorldParams) (*WorldResponse, error) {
-	path := "/worlds/{worldId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result WorldResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // DeleteWorldParams represents the parameters for the DeleteWorld request
 type DeleteWorldParams struct {
 	WorldId string `json:"worldId"`
@@ -5980,6 +5948,38 @@ func (c *Client) GetWorld(params GetWorldParams) (*WorldResponse, error) {
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// UpdateWorldParams represents the parameters for the UpdateWorld request
+type UpdateWorldParams struct {
+	WorldId string `json:"worldId"`
+}
+
+func (c *Client) UpdateWorld(params UpdateWorldParams) (*WorldResponse, error) {
+	path := "/worlds/{worldId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{worldId}", fmt.Sprintf("%v", params.WorldId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result WorldResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
