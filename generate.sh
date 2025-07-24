@@ -21,20 +21,30 @@ go fmt schema.gen.go
 sed -i 's/func NewClient(baseURL string)/func NewClient(baseURL string, UserAgent string)/' ./client.gen.go
 sed -i 's/client: resty.New().SetBaseURL(baseURL),/client: resty.New().SetBaseURL(baseURL).SetHeader("User-Agent", UserAgent),/' ./client.gen.go
 
-# Import net/http for the cookie related functions below
-sed -i '/^import (/a \    "net/http"' ./client.gen.go
-
-# Added SetCookie and GetCookies function to easily manage cookies
+# Added SetClient and GetClient function to easily get the underlying http.client, for better cokkies handeling particulaly
 sed -i '$a \
 \
-func (c *Client) SetCookie(cookie *http.Cookie) {\
-    c.client.SetCookie(cookie)\
+func (c *Client) SetClient(client *resty.Client) {\
+    c.client = client\
 }\n\
-func (c *Client) GetCookies() []*http.Cookie {\
-    return c.client.Cookies\
+func (c *Client) GetClient() *resty.Client {\
+    return c.client\
 }' ./client.gen.go
 
+# Import net/http for the cookie related functions below
+# sed -i '/^import (/a \    "net/http"' ./client.gen.go
 
+# Added SetCookie and GetCookies function to easily manage cookies (does not seem to work correctly)
+# sed -i '$a \
+# \
+# func (c *Client) SetCookie(cookie *http.Cookie) {\
+#     c.client.SetCookie(cookie)\
+# }\n\
+# func (c *Client) GetCookies() []*http.Cookie {\
+#     return c.client.Cookies\
+# }' ./client.gen.go
+
+# (Not needed anymore so commented out)
 # sed -i '/^import (/a \    "reflect"' ./client.gen.go
 # sed -i '/^import (/a \    "strconv"' ./client.gen.go
 
