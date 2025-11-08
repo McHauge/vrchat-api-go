@@ -3516,7 +3516,7 @@ paths:
           name: type
           description: Must be one of PlayerModerationType.
         - schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: ../schemas/UserID.yaml
           in: query
           name: targetUserId
           description: Must be valid UserID.
@@ -4984,7 +4984,16 @@ components:
         platform_history:
           type: array
           items:
-            $ref: '#/components/schemas/PlatformHistory'
+            type: object
+            properties:
+              isMobile:
+                type: boolean
+              platform:
+                type: string
+                nullable: true
+              recorded:
+                type: string
+                format: date-time
         profilePicOverride:
           type: string
         profilePicOverrideThumbnail:
@@ -5134,7 +5143,15 @@ components:
         otp:
           type: array
           items:
-            $ref: '#/components/schemas/Otp'
+            type: object
+            required:
+              - code
+              - used
+            properties:
+              code:
+                type: string
+              used:
+                type: boolean
     TwoFactorEmailCode:
       title: TwoFactorEmailCode
       type: object
@@ -5386,7 +5403,20 @@ components:
         publishedListings:
           type: array
           items:
-            $ref: '#/components/schemas/PublishedListing'
+            type: object
+            properties:
+              description:
+                type: string
+              displayName:
+                type: string
+              imageId:
+                type: string
+              listingId:
+                type: string
+              listingType:
+                type: string
+              priceTokens:
+                type: integer
         releaseStatus:
           $ref: '#/components/schemas/ReleaseStatus'
         searchable:
@@ -12184,47 +12214,6 @@ components:
         - initiatorUserId
       title: NotificationDetailVoteToKick
       type: object
-    PlatformHistory:
-      title: PlatformHistory
-      description: Platform History
-      type: object
-      properties:
-        isMobile:
-          type: boolean
-        platform:
-          $ref: '#/components/schemas/Platform'
-        recorded:
-          type: string
-          format: date-time
-    PublishedListing:
-      title: PublishedListing
-      description: Published Listing
-      type: object
-      properties:
-        description:
-          type: string
-        displayName:
-          type: string
-        imageId:
-          type: string
-        listingId:
-          type: string
-        listingType:
-          type: string
-        priceTokens:
-          type: integer
-    Otp:
-      title: Otp
-      description: Otp
-      type: object
-      required:
-        - code
-        - used
-      properties:
-        code:
-          type: string
-        used:
-          type: boolean
   securitySchemes:
     authHeader:
       type: http
@@ -14164,21 +14153,21 @@ components:
       in: query
       required: false
       schema:
-        $ref: '#/components/schemas/UserID'
+        type: string
       description: Exclude by UserID.
     userId:
       name: userId
       in: path
       required: true
       schema:
-        $ref: '#/components/schemas/UserID'
+        type: string
       description: Must be a valid user ID.
     confirmEmailUserId:
       name: id
       in: query
       required: true
       schema:
-        $ref: '#/components/schemas/UserID'
+        type: string
         example: usr_00000000-0000-0000-0000-000000000000
       description: Target user for which to verify email.
     confirmEmailToken:
@@ -14194,7 +14183,7 @@ components:
       in: query
       required: false
       schema:
-        $ref: '#/components/schemas/UserID'
+        type: string
       description: Filter by UserID.
     verifyLoginPlaceToken:
       name: token
@@ -14303,7 +14292,7 @@ components:
       in: query
       required: false
       schema:
-        $ref: '#/components/schemas/UserID'
+        type: string
       description: Target user to see information on, admin-only.
     monthDate:
       name: date

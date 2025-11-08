@@ -98,6 +98,16 @@ const (
 	DeveloperTypeModerator DeveloperType = "moderator"
 )
 
+// DiscordId https://discord.com/developers/docs/reference#snowflakes
+type DiscordId string
+
+type DiscordDetails struct {
+	GlobalName string `json:"global_name"`
+
+	// Id https://discord.com/developers/docs/reference#snowflakes
+	Id DiscordId `json:"id"`
+}
+
 // WorldId WorldID be "offline" on User profiles if you are not friends with that user.
 type WorldId string
 
@@ -110,6 +120,9 @@ type PastDisplayName struct {
 }
 
 type GroupId string
+
+// LocationId Represents a unique location, consisting of a world identifier and an instance identifier, or "offline" if the user is not on your friends list.
+type LocationId string
 
 type CurrentUserPresence struct {
 	AvatarThumbnail   string    `json:"avatarThumbnail,omitempty"`
@@ -134,9 +147,9 @@ type CurrentUserPresence struct {
 	Status              string `json:"status,omitempty"`
 	TravelingToInstance string `json:"travelingToInstance,omitempty"`
 
-	// TravelingToWorld WorldID be "offline" on User profiles if you are not friends with that user.
-	TravelingToWorld WorldId `json:"travelingToWorld,omitempty"`
-	UserIcon         string  `json:"userIcon,omitempty"`
+	// TravelingToWorld Represents a unique location, consisting of a world identifier and an instance identifier, or "offline" if the user is not on your friends list.
+	TravelingToWorld LocationId `json:"travelingToWorld,omitempty"`
+	UserIcon         string     `json:"userIcon,omitempty"`
 
 	// World WorldID be "offline" on User profiles if you are not friends with that user.
 	World WorldId `json:"world,omitempty"`
@@ -214,10 +227,14 @@ type CurrentUser struct {
 	// "moderator" Is a VRChat Moderator
 	//
 	// Staff can hide their developerType at will.
-	DeveloperType  DeveloperType `json:"developerType"`
-	DisplayName    string        `json:"displayName"`
-	EmailVerified  bool          `json:"emailVerified"`
-	FallbackAvatar AvatarId      `json:"fallbackAvatar,omitempty"`
+	DeveloperType  DeveloperType  `json:"developerType"`
+	DiscordDetails DiscordDetails `json:"discordDetails,omitempty"`
+
+	// DiscordId https://discord.com/developers/docs/reference#snowflakes
+	DiscordId      DiscordId `json:"discordId,omitempty"`
+	DisplayName    string    `json:"displayName"`
+	EmailVerified  bool      `json:"emailVerified"`
+	FallbackAvatar AvatarId  `json:"fallbackAvatar,omitempty"`
 
 	// FriendGroupNames Always empty array.
 	FriendGroupNames          []string `json:"friendGroupNames"`
@@ -259,6 +276,7 @@ type CurrentUser struct {
 	ProfilePicOverride          string              `json:"profilePicOverride"`
 	ProfilePicOverrideThumbnail string              `json:"profilePicOverrideThumbnail"`
 	Pronouns                    string              `json:"pronouns"`
+	PronounsHistory             []string            `json:"pronounsHistory"`
 	QueuedInstance              string              `json:"queuedInstance,omitempty"`
 	ReceiveMobileInvitations    bool                `json:"receiveMobileInvitations,omitempty"`
 
@@ -359,6 +377,18 @@ type RegisterUserAccountRequest struct {
 	Year string `json:"year"`
 }
 
+type AvatarModerationType string
+
+const (
+	AvatarModerationTypeBlock AvatarModerationType = "block"
+)
+
+type AvatarModeration struct {
+	AvatarModerationType AvatarModerationType `json:"avatarModerationType"`
+	Created              time.Time            `json:"created"`
+	TargetAvatarId       AvatarId             `json:"targetAvatarId"`
+}
+
 type ReleaseStatus string
 
 const (
@@ -424,6 +454,7 @@ type Avatar struct {
 	HighestPrice int64     `json:"highestPrice,omitempty"`
 	Id           AvatarId  `json:"id"`
 	ImageUrl     string    `json:"imageUrl"`
+	ListingDate  string    `json:"listingDate"`
 	Lock         bool      `json:"lock,omitempty"`
 	LowestPrice  int64     `json:"lowestPrice,omitempty"`
 	Name         string    `json:"name"`
@@ -571,6 +602,128 @@ type ServiceQueueStats struct {
 	EstimatedServiceDurationSeconds int64 `json:"estimatedServiceDurationSeconds"`
 }
 
+type CalendarId string
+
+type FileId string
+
+type GroupRoleId string
+
+type CalendarEvent struct {
+	AccessType                   string     `json:"accessType"`
+	Category                     string     `json:"category"`
+	CloseInstanceAfterEndMinutes int64      `json:"closeInstanceAfterEndMinutes,omitempty"`
+	CreatedAt                    time.Time  `json:"createdAt,omitempty"`
+	DeletedAt                    time.Time  `json:"deletedAt,omitempty"`
+	Description                  string     `json:"description"`
+	EndsAt                       time.Time  `json:"endsAt"`
+	Featured                     bool       `json:"featured,omitempty"`
+	GuestEarlyJoinMinutes        int64      `json:"guestEarlyJoinMinutes,omitempty"`
+	HostEarlyJoinMinutes         int64      `json:"hostEarlyJoinMinutes,omitempty"`
+	Id                           CalendarId `json:"id"`
+	ImageId                      FileId     `json:"imageId,omitempty"`
+	ImageUrl                     string     `json:"imageUrl,omitempty"`
+	InterestedUserCount          int64      `json:"interestedUserCount,omitempty"`
+	IsDraft                      bool       `json:"isDraft,omitempty"`
+
+	// Languages
+	Languages []string `json:"languages,omitempty"`
+	OwnerId   GroupId  `json:"ownerId,omitempty"`
+
+	// Platforms
+	Platforms []string `json:"platforms,omitempty"`
+
+	// RoleIds
+	RoleIds  []GroupRoleId `json:"roleIds,omitempty"`
+	StartsAt time.Time     `json:"startsAt"`
+
+	// Tags
+	Tags      []Tag     `json:"tags,omitempty"`
+	Title     string    `json:"title"`
+	Type      string    `json:"type,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+
+	UserInterest struct {
+		CreatedAt   time.Time `json:"createdAt,omitempty"`
+		IsFollowing bool      `json:"isFollowing,omitempty"`
+		UpdatedAt   time.Time `json:"updatedAt,omitempty"`
+	} `json:"userInterest,omitempty"`
+	UsesInstanceOverflow bool `json:"usesInstanceOverflow,omitempty"`
+}
+
+type PaginatedCalendarEventList struct {
+	// HasNext Whether there are more results after this page.
+	HasNext bool `json:"hasNext,omitempty"`
+
+	// Results
+	Results []CalendarEvent `json:"results,omitempty"`
+
+	// TotalCount The total number of results that the query would return if there were no pagination.
+	TotalCount int64 `json:"totalCount,omitempty"`
+}
+
+type CreateCalendarEventRequest struct { // AccessType enum
+	AccessType                   string `json:"accessType"`
+	Category                     string `json:"category"`
+	CloseInstanceAfterEndMinutes int64  `json:"closeInstanceAfterEndMinutes,omitempty"`
+	Description                  string `json:"description"`
+
+	// EndsAt Time the event ends at
+	EndsAt                time.Time `json:"endsAt"`
+	Featured              bool      `json:"featured,omitempty"`
+	GuestEarlyJoinMinutes int64     `json:"guestEarlyJoinMinutes,omitempty"`
+	HostEarlyJoinMinutes  int64     `json:"hostEarlyJoinMinutes,omitempty"`
+	ImageId               FileId    `json:"imageId,omitempty"`
+	IsDraft               bool      `json:"isDraft,omitempty"`
+	Languages             []string  `json:"languages,omitempty"`
+	ParentId              string    `json:"parentId,omitempty"`
+	Platforms             []string  `json:"platforms,omitempty"`
+	RoleIds               []string  `json:"roleIds,omitempty"`
+
+	// SendCreationNotification Send notification to group members.
+	SendCreationNotification bool `json:"sendCreationNotification"`
+
+	// StartsAt Time the event starts at
+	StartsAt time.Time `json:"startsAt"`
+	Tags     []string  `json:"tags,omitempty"`
+
+	// Title Event title
+	Title                string `json:"title"`
+	UsesInstanceOverflow bool   `json:"usesInstanceOverflow,omitempty"`
+}
+
+type UpdateCalendarEventRequest struct {
+	Category                     string `json:"category,omitempty"`
+	CloseInstanceAfterEndMinutes int64  `json:"closeInstanceAfterEndMinutes,omitempty"`
+	Description                  string `json:"description,omitempty"`
+
+	// EndsAt Time the vent starts at
+	EndsAt                time.Time `json:"endsAt,omitempty"`
+	Featured              bool      `json:"featured,omitempty"`
+	GuestEarlyJoinMinutes int64     `json:"guestEarlyJoinMinutes,omitempty"`
+	HostEarlyJoinMinutes  int64     `json:"hostEarlyJoinMinutes,omitempty"`
+	ImageId               FileId    `json:"imageId,omitempty"`
+	IsDraft               bool      `json:"isDraft,omitempty"`
+	Languages             []string  `json:"languages,omitempty"`
+	ParentId              string    `json:"parentId,omitempty"`
+	Platforms             []string  `json:"platforms,omitempty"`
+	RoleIds               []string  `json:"roleIds,omitempty"`
+
+	// SendCreationNotification Send notification to group members.
+	SendCreationNotification bool `json:"sendCreationNotification,omitempty"`
+
+	// StartsAt Time the vent starts at
+	StartsAt time.Time `json:"startsAt,omitempty"`
+	Tags     []string  `json:"tags,omitempty"`
+
+	// Title Event title
+	Title                string `json:"title,omitempty"`
+	UsesInstanceOverflow bool   `json:"usesInstanceOverflow,omitempty"`
+}
+
+type FollowCalendarEventRequest struct {
+	IsFollowing bool `json:"isFollowing"`
+}
+
 type TransactionId string
 
 type TransactionStatus string
@@ -695,6 +848,15 @@ type UserSubscription struct {
 	UpdatedAt     time.Time     `json:"updated_at"`
 }
 
+type UserSubscriptionEligible struct {
+	ActiveCancelledSubscription     bool `json:"activeCancelledSubscription"`
+	GiftEligible                    bool `json:"giftEligible"`
+	NonExtendVendorWillLoseGiftTime bool `json:"nonExtendVendorWillLoseGiftTime"`
+	PurchaseEligible                bool `json:"purchaseEligible"`
+	SubscriptionEligible            bool `json:"subscriptionEligible"`
+	SubscriptionOnAltAccount        bool `json:"subscriptionOnAltAccount"`
+}
+
 type LicenseType string
 
 const (
@@ -726,10 +888,6 @@ type LicenseGroup struct {
 	Licenses    []License      `json:"licenses"`
 	Name        string         `json:"name"`
 }
-
-type FileId string
-
-type GroupRoleId string
 
 type ProductId string
 
@@ -780,23 +938,23 @@ type ProductListingVariant struct {
 
 type ProductListing struct {
 	Active            bool                    `json:"active"`
-	Archived          bool                    `json:"archived"`
 	BuyerRefundable   bool                    `json:"buyerRefundable"`
-	Created           time.Time               `json:"created"`
 	Description       string                  `json:"description"`
 	DisplayName       string                  `json:"displayName"`
 	Duration          int64                   `json:"duration,omitempty"`
 	DurationType      string                  `json:"durationType,omitempty"`
-	GroupIcon         FileId                  `json:"groupIcon"`
-	GroupId           GroupId                 `json:"groupId"`
-	GroupName         string                  `json:"groupName"`
+	GroupIcon         FileId                  `json:"groupIcon,omitempty"`
+	GroupId           GroupId                 `json:"groupId,omitempty"`
+	GroupName         string                  `json:"groupName,omitempty"`
+	HasAvatar         bool                    `json:"hasAvatar"`
+	HasUdon           bool                    `json:"hasUdon"`
 	HydratedProducts  []Product               `json:"hydratedProducts,omitempty"`
 	Id                ProductId               `json:"id"`
-	ImageId           FileId                  `json:"imageId"`
-	Instant           bool                    `json:"instant"`
+	ImageId           FileId                  `json:"imageId,omitempty"`
+	ImageUrl          string                  `json:"imageUrl,omitempty"`
 	ListingType       ProductListingType      `json:"listingType"`
-	ListingVariants   []ProductListingVariant `json:"listingVariants"`
-	Permanent         bool                    `json:"permanent"`
+	ListingVariants   []ProductListingVariant `json:"listingVariants,omitempty"`
+	Permanent         bool                    `json:"permanent,omitempty"`
 	PriceTokens       int64                   `json:"priceTokens"`
 	ProductIds        []ProductId             `json:"productIds"`
 	ProductType       ProductType             `json:"productType"`
@@ -808,13 +966,13 @@ type ProductListing struct {
 	SellerId          string                  `json:"sellerId"`
 	Stackable         bool                    `json:"stackable"`
 	StoreIds          []string                `json:"storeIds"`
-	Tags              []Tag                   `json:"tags"`
-	Updated           time.Time               `json:"updated"`
+	Tags              []Tag                   `json:"tags,omitempty"`
 }
 
 type TokenBundle struct {
 	// Amount price of the bundle
 	Amount          int64  `json:"amount"`
+	AppleProductId  string `json:"appleProductId"`
 	Description     string `json:"description"`
 	GoogleProductId string `json:"googleProductId,omitempty"`
 	Id              string `json:"id"`
@@ -844,6 +1002,78 @@ type Balance struct {
 	NoTransactions bool  `json:"noTransactions,omitempty"`
 	TiliaResponse  bool  `json:"tiliaResponse,omitempty"`
 }
+
+type EconomyAccount struct {
+	AccountActivatedOn time.Time `json:"accountActivatedOn"`
+	AccountId          string    `json:"accountId"`
+	Blocked            bool      `json:"blocked"`
+	CanSpend           bool      `json:"canSpend"`
+	Source             string    `json:"source"`
+
+	// UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
+}
+
+type StoreId string
+
+type StoreType string
+
+const (
+	StoreTypeHouse StoreType = "house"
+	StoreTypeWorld StoreType = "world"
+	StoreTypeGroup StoreType = "group"
+)
+
+type StoreShelfId string
+
+type StoreShelf struct {
+	Id               StoreShelfId     `json:"id"`
+	ListingIds       []ProductId      `json:"listingIds"`
+	Listings         []ProductListing `json:"listings,omitempty"`
+	ShelfDescription string           `json:"shelfDescription"`
+	ShelfLayout      string           `json:"shelfLayout"`
+	ShelfTitle       string           `json:"shelfTitle"`
+	UpdatedAt        string           `json:"updatedAt"`
+}
+
+type Store struct {
+	Description string  `json:"description"`
+	DisplayName string  `json:"displayName"`
+	GroupId     GroupId `json:"groupId,omitempty"`
+	Id          StoreId `json:"id"`
+
+	// ListingIds Only for store type world and group
+	ListingIds []ProductId `json:"listingIds,omitempty"`
+
+	// Listings Only for store type world and group
+	Listings          []ProductListing `json:"listings,omitempty"`
+	SellerDisplayName string           `json:"sellerDisplayName"`
+
+	// SellerId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	SellerId UserId `json:"sellerId"`
+
+	// ShelfIds Only for store type house
+	ShelfIds []StoreShelfId `json:"shelfIds,omitempty"`
+
+	// Shelves Only for store type house
+	Shelves   []StoreShelf `json:"shelves,omitempty"`
+	StoreId   StoreId      `json:"storeId"`
+	StoreType StoreType    `json:"storeType"`
+	Tags      []Tag        `json:"tags"`
+
+	// WorldId WorldID be "offline" on User profiles if you are not friends with that user.
+	WorldId WorldId `json:"worldId,omitempty"`
+}
+
+type StoreView string
+
+const (
+	StoreViewAll           StoreView = "all"
+	StoreViewPublicPreview StoreView = "publicPreview"
+	StoreViewPublic        StoreView = "public"
+	StoreViewPreview       StoreView = "preview"
+	StoreViewDraft         StoreView = "draft"
+)
 
 type FavoriteId string
 
@@ -1040,6 +1270,7 @@ type FileAnalysisAvatarStats struct {
 	CameraCount                 int64     `json:"cameraCount,omitempty"`
 	ClothCount                  int64     `json:"clothCount"`
 	ConstraintCount             int64     `json:"constraintCount"`
+	ConstraintDepth             int64     `json:"constraintDepth"`
 	ContactCount                int64     `json:"contactCount"`
 	CustomExpressions           bool      `json:"customExpressions"`
 	CustomizeAnimationLayers    bool      `json:"customizeAnimationLayers"`
@@ -1123,7 +1354,7 @@ type LimitedUserFriend struct {
 	BioLinks []string `json:"bioLinks,omitempty"`
 
 	// CurrentAvatarImageUrl When profilePicOverride is not empty, use it instead.
-	CurrentAvatarImageUrl CurrentAvatarImageUrl `json:"currentAvatarImageUrl"`
+	CurrentAvatarImageUrl CurrentAvatarImageUrl `json:"currentAvatarImageUrl,omitempty"`
 	CurrentAvatarTags     []Tag                 `json:"currentAvatarTags,omitempty"`
 
 	// CurrentAvatarThumbnailImageUrl When profilePicOverride is not empty, use it instead.
@@ -1151,8 +1382,8 @@ type LimitedUserFriend struct {
 	LastPlatform                Platform `json:"last_platform"`
 	Location                    string   `json:"location"`
 	Platform                    string   `json:"platform"`
-	ProfilePicOverride          string   `json:"profilePicOverride"`
-	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail"`
+	ProfilePicOverride          string   `json:"profilePicOverride,omitempty"`
+	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail,omitempty"`
 
 	// Status Defines the User's current status, for example "ask me", "join me" or "offline. This status is a combined indicator of their online activity and privacy preference.
 	Status            UserStatus `json:"status"`
@@ -1160,7 +1391,7 @@ type LimitedUserFriend struct {
 
 	// Tags <- Always empty.
 	Tags     []Tag  `json:"tags"`
-	UserIcon string `json:"userIcon"`
+	UserIcon string `json:"userIcon,omitempty"`
 }
 
 type NotificationType string
@@ -1338,26 +1569,29 @@ const (
 	GroupPermissionsGroupMembersViewall             GroupPermissions = "group-members-viewall"
 	GroupPermissionsGroupRolesAssign                GroupPermissions = "group-roles-assign"
 	GroupPermissionsGroupRolesManage                GroupPermissions = "group-roles-manage"
+	GroupPermissionsGroupCalendarManage             GroupPermissions = "group-calendar-manage"
+	GroupPermissionsGroupInstanceCalendarLink       GroupPermissions = "group-instance-calendar-link"
 )
 
 type GroupMyMember struct {
-	AcceptedByDisplayName       string             `json:"acceptedByDisplayName,omitempty"`
-	AcceptedById                string             `json:"acceptedById,omitempty"`
-	BannedAt                    string             `json:"bannedAt,omitempty"`
-	CreatedAt                   time.Time          `json:"createdAt,omitempty"`
-	GroupId                     GroupId            `json:"groupId,omitempty"`
-	Has2Fa                      bool               `json:"has2FA,omitempty"`
-	HasJoinedFromPurchase       bool               `json:"hasJoinedFromPurchase,omitempty"`
-	Id                          GroupMemberId      `json:"id,omitempty"`
-	IsRepresenting              bool               `json:"isRepresenting,omitempty"`
-	IsSubscribedToAnnouncements bool               `json:"isSubscribedToAnnouncements,omitempty"`
-	JoinedAt                    time.Time          `json:"joinedAt,omitempty"`
-	LastPostReadAt              time.Time          `json:"lastPostReadAt,omitempty"`
-	MRoleIds                    []string           `json:"mRoleIds,omitempty"`
-	ManagerNotes                string             `json:"managerNotes,omitempty"`
-	MembershipStatus            string             `json:"membershipStatus,omitempty"`
-	Permissions                 []GroupPermissions `json:"permissions,omitempty"`
-	RoleIds                     []GroupRoleId      `json:"roleIds,omitempty"`
+	AcceptedByDisplayName            string             `json:"acceptedByDisplayName,omitempty"`
+	AcceptedById                     string             `json:"acceptedById,omitempty"`
+	BannedAt                         string             `json:"bannedAt,omitempty"`
+	CreatedAt                        time.Time          `json:"createdAt,omitempty"`
+	GroupId                          GroupId            `json:"groupId,omitempty"`
+	Has2Fa                           bool               `json:"has2FA,omitempty"`
+	HasJoinedFromPurchase            bool               `json:"hasJoinedFromPurchase,omitempty"`
+	Id                               GroupMemberId      `json:"id,omitempty"`
+	IsRepresenting                   bool               `json:"isRepresenting,omitempty"`
+	IsSubscribedToAnnouncements      bool               `json:"isSubscribedToAnnouncements,omitempty"`
+	IsSubscribedToEventAnnouncements bool               `json:"isSubscribedToEventAnnouncements,omitempty"`
+	JoinedAt                         time.Time          `json:"joinedAt,omitempty"`
+	LastPostReadAt                   time.Time          `json:"lastPostReadAt,omitempty"`
+	MRoleIds                         []string           `json:"mRoleIds,omitempty"`
+	ManagerNotes                     string             `json:"managerNotes,omitempty"`
+	MembershipStatus                 string             `json:"membershipStatus,omitempty"`
+	Permissions                      []GroupPermissions `json:"permissions,omitempty"`
+	RoleIds                          []GroupRoleId      `json:"roleIds,omitempty"`
 
 	// UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	UserId     UserId `json:"userId,omitempty"`
@@ -1540,11 +1774,12 @@ type GroupMember struct {
 	Id                    GroupMemberId `json:"id,omitempty"`
 
 	// IsRepresenting Whether the user is representing the group. This makes the group show up above the name tag in-game.
-	IsRepresenting              bool          `json:"isRepresenting,omitempty"`
-	IsSubscribedToAnnouncements bool          `json:"isSubscribedToAnnouncements,omitempty"`
-	JoinedAt                    time.Time     `json:"joinedAt,omitempty"`
-	LastPostReadAt              time.Time     `json:"lastPostReadAt,omitempty"`
-	MRoleIds                    []GroupRoleId `json:"mRoleIds,omitempty"`
+	IsRepresenting                   bool          `json:"isRepresenting,omitempty"`
+	IsSubscribedToAnnouncements      bool          `json:"isSubscribedToAnnouncements,omitempty"`
+	IsSubscribedToEventAnnouncements bool          `json:"isSubscribedToEventAnnouncements,omitempty"`
+	JoinedAt                         time.Time     `json:"joinedAt,omitempty"`
+	LastPostReadAt                   time.Time     `json:"lastPostReadAt,omitempty"`
+	MRoleIds                         []GroupRoleId `json:"mRoleIds,omitempty"`
 
 	// ManagerNotes Only visible via the /groups/:groupId/members endpoint, **not** when fetching a specific user.
 	ManagerNotes     string            `json:"managerNotes,omitempty"`
@@ -1646,8 +1881,6 @@ type InstanceContentSettings struct {
 	Stickers  bool `json:"stickers,omitempty"`
 }
 
-type StoreId string
-
 // UdonProductId A unique ID of a Udon Product
 type UdonProductId string
 
@@ -1705,10 +1938,11 @@ type World struct {
 }
 
 type GroupInstance struct {
-	InstanceId string `json:"instanceId"`
+	// InstanceId InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
+	InstanceId InstanceId `json:"instanceId"`
 
-	// Location InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
-	Location    InstanceId `json:"location"`
+	// Location Represents a unique location, consisting of a world identifier and an instance identifier, or "offline" if the user is not on your friends list.
+	Location    LocationId `json:"location"`
 	MemberCount int64      `json:"memberCount"`
 	World       World      `json:"world"`
 }
@@ -1738,11 +1972,12 @@ type GroupLimitedMember struct {
 	Id                    GroupMemberId `json:"id,omitempty"`
 
 	// IsRepresenting Whether the user is representing the group. This makes the group show up above the name tag in-game.
-	IsRepresenting              bool          `json:"isRepresenting,omitempty"`
-	IsSubscribedToAnnouncements bool          `json:"isSubscribedToAnnouncements,omitempty"`
-	JoinedAt                    time.Time     `json:"joinedAt,omitempty"`
-	LastPostReadAt              time.Time     `json:"lastPostReadAt,omitempty"`
-	MRoleIds                    []GroupRoleId `json:"mRoleIds,omitempty"`
+	IsRepresenting                   bool          `json:"isRepresenting,omitempty"`
+	IsSubscribedToAnnouncements      bool          `json:"isSubscribedToAnnouncements,omitempty"`
+	IsSubscribedToEventAnnouncements bool          `json:"isSubscribedToEventAnnouncements,omitempty"`
+	JoinedAt                         time.Time     `json:"joinedAt,omitempty"`
+	LastPostReadAt                   time.Time     `json:"lastPostReadAt,omitempty"`
+	MRoleIds                         []GroupRoleId `json:"mRoleIds,omitempty"`
 
 	// ManagerNotes Only visible via the /groups/:groupId/members endpoint, **not** when fetching a specific user.
 	ManagerNotes     string            `json:"managerNotes,omitempty"`
@@ -1763,9 +1998,10 @@ const (
 )
 
 type UpdateGroupMemberRequest struct {
-	IsSubscribedToAnnouncements bool                `json:"isSubscribedToAnnouncements,omitempty"`
-	ManagerNotes                string              `json:"managerNotes,omitempty"`
-	Visibility                  GroupUserVisibility `json:"visibility,omitempty"`
+	IsSubscribedToAnnouncements      bool                `json:"isSubscribedToAnnouncements,omitempty"`
+	IsSubscribedToEventAnnouncements bool                `json:"isSubscribedToEventAnnouncements,omitempty"`
+	ManagerNotes                     string              `json:"managerNotes,omitempty"`
+	Visibility                       GroupUserVisibility `json:"visibility,omitempty"`
 }
 
 // GroupRoleIdList
@@ -1874,6 +2110,17 @@ const (
 	InventoryItemTypeSticker InventoryItemType = "sticker"
 )
 
+type InventoryFlag string
+
+const (
+	InventoryFlagInstantiatable InventoryFlag = "instantiatable"
+	InventoryFlagArchivable     InventoryFlag = "archivable"
+	InventoryFlagConsumable     InventoryFlag = "consumable"
+	InventoryFlagTrashable      InventoryFlag = "trashable"
+	InventoryFlagCloneable      InventoryFlag = "cloneable"
+	InventoryFlagUgc            InventoryFlag = "ugc"
+)
+
 type InventoryItemId string
 
 type InventoryTemplateId string
@@ -1920,6 +2167,10 @@ type InventoryItem struct {
 type Inventory struct {
 	Data       []InventoryItem `json:"data"`
 	TotalCount int64           `json:"totalCount"`
+}
+
+type UpdateInventoryItemRequest struct {
+	IsArchived bool `json:"isArchived,omitempty"`
 }
 
 type InventoryDropId string
@@ -1969,6 +2220,17 @@ type InventoryTemplate struct {
 type InventorySpawn struct {
 	Token   string `json:"token"`
 	Version int64  `json:"version"`
+}
+
+type ShareInventoryItemDirectRequest struct {
+	ItemId InventoryItemId `json:"itemId"`
+	Users  []UserId        `json:"users"`
+}
+
+// OkStatus A status response consisting of solely a string description of whether the result of an operation was ok.
+type OkStatus struct {
+	// Ok The actual status itself
+	Ok string `json:"ok"`
 }
 
 type InviteRequest struct {
@@ -2158,12 +2420,10 @@ type LimitedUserInstance struct {
 	LastMobile   time.Time `json:"last_mobile"`
 
 	// LastPlatform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	LastPlatform Platform `json:"last_platform"`
-
-	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform                    Platform `json:"platform,omitempty"`
-	ProfilePicOverride          string   `json:"profilePicOverride"`
-	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail"`
+	LastPlatform                Platform `json:"last_platform"`
+	Platform                    string   `json:"platform,omitempty"`
+	ProfilePicOverride          string   `json:"profilePicOverride,omitempty"`
+	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail,omitempty"`
 	Pronouns                    string   `json:"pronouns"`
 
 	// State * "online" User is online in VRChat
@@ -2177,7 +2437,7 @@ type LimitedUserInstance struct {
 	Status            UserStatus `json:"status"`
 	StatusDescription string     `json:"statusDescription"`
 	Tags              []Tag      `json:"tags"`
-	UserIcon          string     `json:"userIcon"`
+	UserIcon          string     `json:"userIcon,omitempty"`
 }
 
 // Instance * `hidden` field is only present if InstanceType is `hidden` aka "Friends+", and is instance creator.
@@ -2194,8 +2454,8 @@ type Instance struct {
 	ClosedAt     time.Time `json:"closedAt,omitempty"`
 
 	// ContentSettings Types of dynamic user content permitted in an instance
-	ContentSettings InstanceContentSettings `json:"contentSettings"`
-	DisplayName     string                  `json:"displayName"`
+	ContentSettings InstanceContentSettings `json:"contentSettings,omitempty"`
+	DisplayName     string                  `json:"displayName,omitempty"`
 
 	// Friends A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	Friends           UserId `json:"friends,omitempty"`
@@ -2211,12 +2471,14 @@ type Instance struct {
 	Hidden UserId `json:"hidden,omitempty"`
 
 	// Id InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
-	Id                         InstanceId `json:"id"`
-	InstanceId                 string     `json:"instanceId"`
-	InstancePersistenceEnabled string     `json:"instancePersistenceEnabled"`
+	Id InstanceId `json:"id"`
 
-	// Location InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
-	Location InstanceId `json:"location"`
+	// InstanceId InstanceID can be "offline" on User profiles if you are not friends with that user and "private" if you are friends and user is in private instance.
+	InstanceId                 InstanceId `json:"instanceId"`
+	InstancePersistenceEnabled string     `json:"instancePersistenceEnabled,omitempty"`
+
+	// Location Represents a unique location, consisting of a world identifier and an instance identifier, or "offline" if the user is not on your friends list.
+	Location LocationId `json:"location"`
 	NUsers   int64      `json:"n_users"`
 	Name     string     `json:"name"`
 	Nonce    string     `json:"nonce,omitempty"`
@@ -2228,7 +2490,7 @@ type Instance struct {
 	// PhotonRegion API/Photon region.
 	PhotonRegion             Region            `json:"photonRegion"`
 	Platforms                InstancePlatforms `json:"platforms"`
-	PlayerPersistenceEnabled bool              `json:"playerPersistenceEnabled"`
+	PlayerPersistenceEnabled bool              `json:"playerPersistenceEnabled,omitempty"`
 
 	// Private A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	Private             UserId `json:"private,omitempty"`
@@ -2261,18 +2523,21 @@ type InstanceShortNameResponse struct {
 	ShortName  string `json:"shortName,omitempty"`
 }
 
-type PlayerModerationId string
-
 type PlayerModerationType string
 
 const (
-	PlayerModerationTypeMute        PlayerModerationType = "mute"
-	PlayerModerationTypeUnmute      PlayerModerationType = "unmute"
 	PlayerModerationTypeBlock       PlayerModerationType = "block"
-	PlayerModerationTypeUnblock     PlayerModerationType = "unblock"
+	PlayerModerationTypeMute        PlayerModerationType = "mute"
+	PlayerModerationTypeMuteChat    PlayerModerationType = "muteChat"
+	PlayerModerationTypeUnmute      PlayerModerationType = "unmute"
+	PlayerModerationTypeUnmuteChat  PlayerModerationType = "unmuteChat"
+	PlayerModerationTypeHideAvatar  PlayerModerationType = "hideAvatar"
+	PlayerModerationTypeShowAvatar  PlayerModerationType = "showAvatar"
 	PlayerModerationTypeInteractOn  PlayerModerationType = "interactOn"
 	PlayerModerationTypeInteractOff PlayerModerationType = "interactOff"
 )
+
+type PlayerModerationId string
 
 type PlayerModeration struct {
 	Created           time.Time          `json:"created"`
@@ -2417,7 +2682,7 @@ type LimitedUserSearch struct {
 
 	// LastPlatform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
 	LastPlatform       Platform `json:"last_platform"`
-	ProfilePicOverride string   `json:"profilePicOverride"`
+	ProfilePicOverride string   `json:"profilePicOverride,omitempty"`
 	Pronouns           string   `json:"pronouns,omitempty"`
 
 	// Status Defines the User's current status, for example "ask me", "join me" or "offline. This status is a combined indicator of their online activity and privacy preference.
@@ -2426,7 +2691,7 @@ type LimitedUserSearch struct {
 
 	// Tags <- Always empty.
 	Tags     []Tag  `json:"tags"`
-	UserIcon string `json:"userIcon"`
+	UserIcon string `json:"userIcon,omitempty"`
 }
 
 type User struct {
@@ -2484,15 +2749,13 @@ type User struct {
 	// LastPlatform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
 	LastPlatform Platform `json:"last_platform"`
 
-	// Location WorldID be "offline" on User profiles if you are not friends with that user.
-	Location WorldId `json:"location,omitempty"`
-	Note     string  `json:"note,omitempty"`
-
-	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform                    Platform `json:"platform,omitempty"`
-	ProfilePicOverride          string   `json:"profilePicOverride"`
-	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail"`
-	Pronouns                    string   `json:"pronouns"`
+	// Location Represents a unique location, consisting of a world identifier and an instance identifier, or "offline" if the user is not on your friends list.
+	Location                    LocationId `json:"location,omitempty"`
+	Note                        string     `json:"note,omitempty"`
+	Platform                    string     `json:"platform,omitempty"`
+	ProfilePicOverride          string     `json:"profilePicOverride"`
+	ProfilePicOverrideThumbnail string     `json:"profilePicOverrideThumbnail"`
+	Pronouns                    string     `json:"pronouns"`
 
 	// State * "online" User is online in VRChat
 	// * "active" User is online, but not in VRChat
@@ -2660,6 +2923,8 @@ type UpdateUserBadgeRequest struct {
 }
 
 type LimitedUnityPackage struct {
+	CreatedAt time.Time `json:"created_at"`
+
 	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
 	Platform     Platform `json:"platform"`
 	UnityVersion string   `json:"unityVersion"`
@@ -2729,7 +2994,7 @@ type CreateWorldRequest struct {
 
 type FavoritedWorld struct {
 	// AuthorId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	AuthorId   UserId    `json:"authorId"`
+	AuthorId   UserId    `json:"authorId,omitempty"`
 	AuthorName string    `json:"authorName"`
 	Capacity   int64     `json:"capacity"`
 	CreatedAt  time.Time `json:"created_at"`
@@ -2920,16 +3185,14 @@ type DynamicContentRow struct {
 	Index int64  `json:"index,omitempty"`
 	Name  string `json:"name"`
 
-	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform      Platform `json:"platform"`
-	SortHeading   string   `json:"sortHeading"`
-	SortOrder     string   `json:"sortOrder"`
-	SortOwnership string   `json:"sortOwnership"`
+	// Platform Usually "ThisPlatformSupported", but can also be other values such as "all" or platform specific identifiers.
+	Platform      string `json:"platform"`
+	SortHeading   string `json:"sortHeading"`
+	SortOrder     string `json:"sortOrder"`
+	SortOwnership string `json:"sortOwnership"`
 
-	// Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag,omitempty"`
+	// Tag Tag to filter content for this row.
+	Tag string `json:"tag,omitempty"`
 
 	// Type Type is not present if it is a world.
 	Type string `json:"type,omitempty"`
@@ -3596,9 +3859,9 @@ type Permission struct {
 type NotificationDetailInvite struct {
 	InviteMessage string `json:"inviteMessage,omitempty"`
 
-	// WorldId WorldID be "offline" on User profiles if you are not friends with that user.
-	WorldId   WorldId `json:"worldId"`
-	WorldName string  `json:"worldName"`
+	// WorldId Represents a unique location, consisting of a world identifier and an instance identifier, or "offline" if the user is not on your friends list.
+	WorldId   LocationId `json:"worldId"`
+	WorldName string     `json:"worldName"`
 }
 
 type NotificationDetailInviteResponse struct {
@@ -3607,8 +3870,8 @@ type NotificationDetailInviteResponse struct {
 }
 
 type NotificationDetailRequestInvite struct {
-	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform Platform `json:"platform,omitempty"`
+	// Platform TODO: Does this still exist?
+	Platform string `json:"platform,omitempty"`
 
 	// RequestMessage Used when using InviteMessage Slot.
 	RequestMessage string `json:"requestMessage,omitempty"`
@@ -3631,8 +3894,10 @@ type NotificationDetailVoteToKick struct {
 
 // PlatformHistory Platform History
 type PlatformHistory struct {
-	IsMobile bool      `json:"isMobile,omitempty"`
-	Platform string    `json:"platform,omitempty"`
+	IsMobile bool `json:"isMobile,omitempty"`
+
+	// Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
+	Platform Platform  `json:"platform,omitempty"`
 	Recorded time.Time `json:"recorded,omitempty"`
 }
 
@@ -3685,6 +3950,8 @@ type ConfirmEmailResponse any
 // VerifyLoginPlaceResponse OK
 type VerifyLoginPlaceResponse any
 
+type GetAvatarModerationsResponse []AvatarModeration
+
 type AvatarResponse Avatar
 
 type AvatarSeeOtherUserCurrentAvatarError Error
@@ -3711,11 +3978,24 @@ type AvatarImpostorEnqueueResponse ServiceStatus
 // AvatarImpostorQueueStatsResponse Statistics about the user's currently queued service request
 type AvatarImpostorQueueStatsResponse ServiceQueueStats
 
+type CalendarEventListResponse PaginatedCalendarEventList
+
+type CalendarEventResponse CalendarEvent
+
+type DeleteCalendarEventSuccess Success
+
+// IcsResponse iCalendar file download
+type IcsResponse any
+
+type IcsNotFoundError Error
+
 type TransactionListResponse []Transaction
 
 type TransactionResponse Transaction
 
 type UserSubscriptionListResponse []UserSubscription
+
+type UserSubscriptionEligibleResponse UserSubscriptionEligible
 
 type SubscriptionListResponse []Subscription
 
@@ -3732,6 +4012,14 @@ type TiliaStatusResponse TiliaStatus
 type TiliaTosResponse TiliaTos
 
 type BalanceResponse Balance
+
+type EconomyAccountResponse EconomyAccount
+
+type LicenseListResponse []License
+
+type StoreResponse Store
+
+type StoreShelfListResponse []StoreShelf
 
 type FavoriteListResponse []Favorite
 
@@ -3881,6 +4169,9 @@ type InventoryTemplateResponse InventoryTemplate
 
 type InventorySpawnResponse InventorySpawn
 
+// InventoryShareResponse A status response consisting of solely a string description of whether the result of an operation was ok.
+type InventoryShareResponse OkStatus
+
 type SendNotificationResponse SentNotification
 
 type InviteMustBeFriendsError Error
@@ -3909,6 +4200,8 @@ type InviteMessageNoEntryForSlotError Error
 // * `friends` field is only present if InstanceType is `friends` aka "Friends", and is instance creator.
 // * `private` field is only present if InstanceType is `private` aka "Invite" or "Invite+", and is instance creator.
 type InstanceResponse Instance
+
+type LocationIdListResponse []LocationId
 
 type InstanceCloseForbiddenError Error
 

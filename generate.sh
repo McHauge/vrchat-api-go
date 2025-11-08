@@ -4,7 +4,10 @@
 # wget https://vrchat.community/openapi.yaml -O openapi.yaml
 
 # If you have Curl
-# curl.exe --output openapi.yaml --url https://vrchat.community/openapi.yaml
+curl.exe --output openapi.yaml --url https://vrchat.community/openapi.yaml
+
+# Fix openapi.yaml schema issues
+cd utils && go run fix_schema.go && cd ..
 
 # Old Style generator
 go install github.com/mchauge/openapi-codegen@latest

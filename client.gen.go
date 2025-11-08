@@ -133,28 +133,6 @@ func (c *Client) Verify2Fa(body TwoFactorAuthCode) (*Verify2FaResponse, error) {
 	return &result, nil
 }
 
-func (c *Client) CancelPending2Fa() (*Disable2FaResponse, error) {
-	path := "/auth/twofactorauth/totp/pending"
-
-	// Create request
-	req := c.client.R()
-	// Set response object
-	var result Disable2FaResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Delete(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 func (c *Client) Enable2Fa() (*Pending2FaResponse, error) {
 	path := "/auth/twofactorauth/totp/pending"
 
@@ -166,6 +144,28 @@ func (c *Client) Enable2Fa() (*Pending2FaResponse, error) {
 
 	// Send request
 	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+func (c *Client) CancelPending2Fa() (*Disable2FaResponse, error) {
+	path := "/auth/twofactorauth/totp/pending"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result Disable2FaResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -463,6 +463,28 @@ func (c *Client) VerifyLoginPlace(params VerifyLoginPlaceParams) error {
 	return nil
 }
 
+func (c *Client) GetGlobalAvatarModerations() (*GetAvatarModerationsResponse, error) {
+	path := "/auth/user/avatarmoderations"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result GetAvatarModerationsResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // GetOwnAvatarParams represents the parameters for the GetOwnAvatar request
 type GetOwnAvatarParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	UserId UserId `json:"userId"`
@@ -495,24 +517,44 @@ func (c *Client) GetOwnAvatar(params GetOwnAvatarParams) (*AvatarResponse, error
 	return &result, nil
 }
 
+func (c *Client) CreateAvatar(body CreateAvatarRequest) (*AvatarResponse, error) {
+	path := "/avatars"
+
+	// Create request
+	req := c.client.R()
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result AvatarResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // SearchAvatarsParams represents the parameters for the SearchAvatars request
 type SearchAvatarsParams struct {
-	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	UserId   UserId      `json:"userId"`
-	N        int64       `json:"n"`
-	Order    OrderOption `json:"order"`
-	Offset   int64       `json:"offset"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"` // Notag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Notag           Tag           `json:"notag"`
+	Featured        bool          `json:"featured"`
+	Sort            SortOption    `json:"sort"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId          UserId        `json:"userId"`
+	N               int64         `json:"n"`
+	Order           OrderOption   `json:"order"`
+	Offset          int64         `json:"offset"`
+	Tag             string        `json:"tag"`
+	Notag           string        `json:"notag"`
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
-	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`
+	MinUnityVersion string        `json:"minUnityVersion"`
+	Platform        string        `json:"platform"`
 }
 
 func (c *Client) SearchAvatars(params SearchAvatarsParams) (*AvatarListResponse, error) {
@@ -577,30 +619,6 @@ func (c *Client) SearchAvatars(params SearchAvatarsParams) (*AvatarListResponse,
 	return &result, nil
 }
 
-func (c *Client) CreateAvatar(body CreateAvatarRequest) (*AvatarResponse, error) {
-	path := "/avatars"
-
-	// Create request
-	req := c.client.R()
-	// Set request body
-	req.SetBody(body)
-	// Set response object
-	var result AvatarResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Post(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 func (c *Client) GetAvatarStyles() (*AvatarStyleListResponse, error) {
 	path := "/avatarStyles"
 
@@ -608,38 +626,6 @@ func (c *Client) GetAvatarStyles() (*AvatarStyleListResponse, error) {
 	req := c.client.R()
 	// Set response object
 	var result AvatarStyleListResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Get(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
-// GetAvatarParams represents the parameters for the GetAvatar request
-type GetAvatarParams struct {
-	AvatarId string `json:"avatarId"`
-}
-
-func (c *Client) GetAvatar(params GetAvatarParams) (*AvatarResponse, error) {
-	path := "/avatars/{avatarId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{avatarId}", fmt.Sprintf("%v", params.AvatarId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set response object
-	var result AvatarResponse
 	req.SetResult(&result)
 
 	// Send request
@@ -721,6 +707,38 @@ func (c *Client) DeleteAvatar(params DeleteAvatarParams) (*AvatarResponse, error
 	return &result, nil
 }
 
+// GetAvatarParams represents the parameters for the GetAvatar request
+type GetAvatarParams struct {
+	AvatarId string `json:"avatarId"`
+}
+
+func (c *Client) GetAvatar(params GetAvatarParams) (*AvatarResponse, error) {
+	path := "/avatars/{avatarId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{avatarId}", fmt.Sprintf("%v", params.AvatarId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result AvatarResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // SelectAvatarParams represents the parameters for the SelectAvatar request
 type SelectAvatarParams struct {
 	AvatarId string `json:"avatarId"`
@@ -787,22 +805,18 @@ func (c *Client) SelectFallbackAvatar(params SelectFallbackAvatarParams) (*Curre
 
 // GetFavoritedAvatarsParams represents the parameters for the GetFavoritedAvatars request
 type GetFavoritedAvatarsParams struct {
-	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"`
-	N        int64       `json:"n"`
-	Order    OrderOption `json:"order"`
-	Offset   int64       `json:"offset"`
-	Search   string      `json:"search"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"` // Notag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Notag           Tag           `json:"notag"`
+	Featured        bool          `json:"featured"`
+	Sort            SortOption    `json:"sort"`
+	N               int64         `json:"n"`
+	Order           OrderOption   `json:"order"`
+	Offset          int64         `json:"offset"`
+	Search          string        `json:"search"`
+	Tag             string        `json:"tag"`
+	Notag           string        `json:"notag"`
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
-	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`        // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	MinUnityVersion string        `json:"minUnityVersion"`
+	Platform        string        `json:"platform"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	UserId          UserId        `json:"userId"`
 }
 
@@ -992,6 +1006,430 @@ func (c *Client) DeleteImpostor(params DeleteImpostorParams) error {
 	return nil
 }
 
+// GetCalendarEventsParams represents the parameters for the GetCalendarEvents request
+type GetCalendarEventsParams struct {
+	Date   time.Time `json:"date"`
+	N      int64     `json:"n"`
+	Offset int64     `json:"offset"`
+}
+
+func (c *Client) GetCalendarEvents(params GetCalendarEventsParams) (*CalendarEventListResponse, error) {
+	path := "/calendar"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.Date) {
+		queryParams["date"] = fmt.Sprintf("%v", params.Date)
+	}
+	if lo.IsNotEmpty(params.N) {
+		queryParams["n"] = fmt.Sprintf("%v", params.N)
+	}
+	if lo.IsNotEmpty(params.Offset) {
+		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CalendarEventListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetFeaturedCalendarEventsParams represents the parameters for the GetFeaturedCalendarEvents request
+type GetFeaturedCalendarEventsParams struct {
+	Date   time.Time `json:"date"`
+	N      int64     `json:"n"`
+	Offset int64     `json:"offset"`
+}
+
+func (c *Client) GetFeaturedCalendarEvents(params GetFeaturedCalendarEventsParams) (*CalendarEventListResponse, error) {
+	path := "/calendar/featured"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.Date) {
+		queryParams["date"] = fmt.Sprintf("%v", params.Date)
+	}
+	if lo.IsNotEmpty(params.N) {
+		queryParams["n"] = fmt.Sprintf("%v", params.N)
+	}
+	if lo.IsNotEmpty(params.Offset) {
+		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CalendarEventListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetFollowedCalendarEventsParams represents the parameters for the GetFollowedCalendarEvents request
+type GetFollowedCalendarEventsParams struct {
+	Date   time.Time `json:"date"`
+	N      int64     `json:"n"`
+	Offset int64     `json:"offset"`
+}
+
+func (c *Client) GetFollowedCalendarEvents(params GetFollowedCalendarEventsParams) (*CalendarEventListResponse, error) {
+	path := "/calendar/following"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.Date) {
+		queryParams["date"] = fmt.Sprintf("%v", params.Date)
+	}
+	if lo.IsNotEmpty(params.N) {
+		queryParams["n"] = fmt.Sprintf("%v", params.N)
+	}
+	if lo.IsNotEmpty(params.Offset) {
+		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CalendarEventListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// SearchCalendarEventsParams represents the parameters for the SearchCalendarEvents request
+type SearchCalendarEventsParams struct {
+	SearchTerm string `json:"searchTerm"`
+	UtcOffset  int64  `json:"utcOffset"`
+	N          int64  `json:"n"`
+	Offset     int64  `json:"offset"`
+}
+
+func (c *Client) SearchCalendarEvents(params SearchCalendarEventsParams) (*CalendarEventListResponse, error) {
+	path := "/calendar/search"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.SearchTerm) {
+		queryParams["searchTerm"] = fmt.Sprintf("%v", params.SearchTerm)
+	}
+	if lo.IsNotEmpty(params.UtcOffset) {
+		queryParams["utcOffset"] = fmt.Sprintf("%v", params.UtcOffset)
+	}
+	if lo.IsNotEmpty(params.N) {
+		queryParams["n"] = fmt.Sprintf("%v", params.N)
+	}
+	if lo.IsNotEmpty(params.Offset) {
+		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CalendarEventListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetGroupCalendarEventsParams represents the parameters for the GetGroupCalendarEvents request
+type GetGroupCalendarEventsParams struct {
+	GroupId string    `json:"groupId"`
+	Date    time.Time `json:"date"`
+	N       int64     `json:"n"`
+	Offset  int64     `json:"offset"`
+}
+
+func (c *Client) GetGroupCalendarEvents(params GetGroupCalendarEventsParams) (*CalendarEventListResponse, error) {
+	path := "/calendar/{groupId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	if lo.IsNotEmpty(params.Date) {
+		queryParams["date"] = fmt.Sprintf("%v", params.Date)
+	}
+	if lo.IsNotEmpty(params.N) {
+		queryParams["n"] = fmt.Sprintf("%v", params.N)
+	}
+	if lo.IsNotEmpty(params.Offset) {
+		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CalendarEventListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// CreateGroupCalendarEventParams represents the parameters for the CreateGroupCalendarEvent request
+type CreateGroupCalendarEventParams struct {
+	GroupId string `json:"groupId"`
+}
+
+func (c *Client) CreateGroupCalendarEvent(params CreateGroupCalendarEventParams, body CreateCalendarEventRequest) (*CalendarEventResponse, error) {
+	path := "/calendar/{groupId}/event"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result CalendarEventResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// DeleteGroupCalendarEventParams represents the parameters for the DeleteGroupCalendarEvent request
+type DeleteGroupCalendarEventParams struct {
+	GroupId    string `json:"groupId"`
+	CalendarId string `json:"calendarId"`
+}
+
+func (c *Client) DeleteGroupCalendarEvent(params DeleteGroupCalendarEventParams) (*DeleteCalendarEventSuccess, error) {
+	path := "/calendar/{groupId}/{calendarId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{calendarId}", fmt.Sprintf("%v", params.CalendarId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result DeleteCalendarEventSuccess
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Delete(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetGroupCalendarEventParams represents the parameters for the GetGroupCalendarEvent request
+type GetGroupCalendarEventParams struct {
+	GroupId    string `json:"groupId"`
+	CalendarId string `json:"calendarId"`
+}
+
+func (c *Client) GetGroupCalendarEvent(params GetGroupCalendarEventParams) (*CalendarEventResponse, error) {
+	path := "/calendar/{groupId}/{calendarId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{calendarId}", fmt.Sprintf("%v", params.CalendarId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result CalendarEventResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetGroupCalendarEventIcsParams represents the parameters for the GetGroupCalendarEventIcs request
+type GetGroupCalendarEventIcsParams struct {
+	GroupId    string `json:"groupId"`
+	CalendarId string `json:"calendarId"`
+}
+
+func (c *Client) GetGroupCalendarEventIcs(params GetGroupCalendarEventIcsParams) (*IcsResponse, error) {
+	path := "/calendar/{groupId}/{calendarId}.ics"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{calendarId}", fmt.Sprintf("%v", params.CalendarId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result IcsResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// UpdateGroupCalendarEventParams represents the parameters for the UpdateGroupCalendarEvent request
+type UpdateGroupCalendarEventParams struct {
+	GroupId    string `json:"groupId"`
+	CalendarId string `json:"calendarId"`
+}
+
+func (c *Client) UpdateGroupCalendarEvent(params UpdateGroupCalendarEventParams, body UpdateCalendarEventRequest) (*CalendarEventResponse, error) {
+	path := "/calendar/{groupId}/{calendarId}/event"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{calendarId}", fmt.Sprintf("%v", params.CalendarId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result CalendarEventResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// FollowGroupCalendarEventParams represents the parameters for the FollowGroupCalendarEvent request
+type FollowGroupCalendarEventParams struct {
+	GroupId    string `json:"groupId"`
+	CalendarId string `json:"calendarId"`
+}
+
+func (c *Client) FollowGroupCalendarEvent(params FollowGroupCalendarEventParams, body FollowCalendarEventRequest) (*CalendarEventResponse, error) {
+	path := "/calendar/{groupId}/{calendarId}/follow"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{groupId}", fmt.Sprintf("%v", params.GroupId))
+	path = strings.ReplaceAll(path, "{calendarId}", fmt.Sprintf("%v", params.CalendarId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result CalendarEventResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 func (c *Client) GetSteamTransactions() (*TransactionListResponse, error) {
 	path := "/Steam/transactions"
 
@@ -1053,6 +1491,42 @@ func (c *Client) GetCurrentSubscriptions() (*UserSubscriptionListResponse, error
 	req := c.client.R()
 	// Set response object
 	var result UserSubscriptionListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetUserSubscriptionEligibleParams represents the parameters for the GetUserSubscriptionEligible request
+type GetUserSubscriptionEligibleParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId  UserId `json:"userId"`
+	SteamId string `json:"steamId"`
+}
+
+func (c *Client) GetUserSubscriptionEligible(params GetUserSubscriptionEligibleParams) (*UserSubscriptionEligibleResponse, error) {
+	path := "/users/{userId}/subscription/eligible"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+	if lo.IsNotEmpty(params.SteamId) {
+		queryParams["steamId"] = fmt.Sprintf("%v", params.SteamId)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result UserSubscriptionEligibleResponse
 	req.SetResult(&result)
 
 	// Send request
@@ -1318,13 +1792,181 @@ func (c *Client) GetBalance(params GetBalanceParams) (*BalanceResponse, error) {
 	return &result, nil
 }
 
+// GetBalanceEarningsParams represents the parameters for the GetBalanceEarnings request
+type GetBalanceEarningsParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
+}
+
+func (c *Client) GetBalanceEarnings(params GetBalanceEarningsParams) (*BalanceResponse, error) {
+	path := "/user/{userId}/balance/earnings"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result BalanceResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetEconomyAccountParams represents the parameters for the GetEconomyAccount request
+type GetEconomyAccountParams struct { // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId UserId `json:"userId"`
+}
+
+func (c *Client) GetEconomyAccount(params GetEconomyAccountParams) (*EconomyAccountResponse, error) {
+	path := "/user/{userId}/economy/account"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result EconomyAccountResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+func (c *Client) GetActiveLicenses() (*LicenseListResponse, error) {
+	path := "/economy/licenses/active"
+
+	// Create request
+	req := c.client.R()
+	// Set response object
+	var result LicenseListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetStoreParams represents the parameters for the GetStore request
+type GetStoreParams struct {
+	StoreId         StoreId `json:"storeId"`
+	HydrateListings bool    `json:"hydrateListings"`
+	HydrateProducts bool    `json:"hydrateProducts"`
+}
+
+func (c *Client) GetStore(params GetStoreParams) (*StoreResponse, error) {
+	path := "/economy/store"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.StoreId) {
+		queryParams["storeId"] = fmt.Sprintf("%v", params.StoreId)
+	}
+	if lo.IsNotEmpty(params.HydrateListings) {
+		queryParams["hydrateListings"] = fmt.Sprintf("%v", params.HydrateListings)
+	}
+	if lo.IsNotEmpty(params.HydrateProducts) {
+		queryParams["hydrateProducts"] = fmt.Sprintf("%v", params.HydrateProducts)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result StoreResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetStoreShelvesParams represents the parameters for the GetStoreShelves request
+type GetStoreShelvesParams struct {
+	StoreId         StoreId   `json:"storeId"`
+	HydrateListings bool      `json:"hydrateListings"`
+	Fetch           StoreView `json:"fetch"`
+}
+
+func (c *Client) GetStoreShelves(params GetStoreShelvesParams) (*StoreShelfListResponse, error) {
+	path := "/economy/store/shelves"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.StoreId) {
+		queryParams["storeId"] = fmt.Sprintf("%v", params.StoreId)
+	}
+	if lo.IsNotEmpty(params.HydrateListings) {
+		queryParams["hydrateListings"] = fmt.Sprintf("%v", params.HydrateListings)
+	}
+	if lo.IsNotEmpty(params.Fetch) {
+		queryParams["fetch"] = fmt.Sprintf("%v", params.Fetch)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result StoreShelfListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // GetFavoritesParams represents the parameters for the GetFavorites request
 type GetFavoritesParams struct {
-	N      int64 `json:"n"`
-	Offset int64 `json:"offset"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"`
+	N      int64  `json:"n"`
+	Offset int64  `json:"offset"`
+	Tag    string `json:"tag"`
 }
 
 func (c *Client) GetFavorites(params GetFavoritesParams) (*FavoriteListResponse, error) {
@@ -1460,42 +2102,6 @@ func (c *Client) GetFavoriteGroups(params GetFavoriteGroupsParams) (*FavoriteGro
 	return &result, nil
 }
 
-// UpdateFavoriteGroupParams represents the parameters for the UpdateFavoriteGroup request
-type UpdateFavoriteGroupParams struct {
-	// FavoriteGroupType enum
-	FavoriteGroupType string `json:"favoriteGroupType"`
-	FavoriteGroupName string `json:"favoriteGroupName"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	UserId            UserId `json:"userId"`
-}
-
-func (c *Client) UpdateFavoriteGroup(params UpdateFavoriteGroupParams, body UpdateFavoriteGroupRequest) error {
-	path := "/favorite/group/{favoriteGroupType}/{favoriteGroupName}/{userId}"
-	// Replace path parameters and prepare query parameters
-	queryParams := make(map[string]string)
-	path = strings.ReplaceAll(path, "{favoriteGroupType}", fmt.Sprintf("%v", params.FavoriteGroupType))
-	path = strings.ReplaceAll(path, "{favoriteGroupName}", fmt.Sprintf("%v", params.FavoriteGroupName))
-	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
-
-	// Create request
-	req := c.client.R()
-	// Set query parameters
-	req.SetQueryParams(queryParams)
-	// Set request body
-	req.SetBody(body)
-
-	// Send request
-	resp, err := req.Put(path)
-	if err != nil {
-		return fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return nil
-}
-
 // ClearFavoriteGroupParams represents the parameters for the ClearFavoriteGroup request
 type ClearFavoriteGroupParams struct {
 	// FavoriteGroupType enum
@@ -1568,6 +2174,42 @@ func (c *Client) GetFavoriteGroup(params GetFavoriteGroupParams) (*FavoriteGroup
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
 	}
 	return &result, nil
+}
+
+// UpdateFavoriteGroupParams represents the parameters for the UpdateFavoriteGroup request
+type UpdateFavoriteGroupParams struct {
+	// FavoriteGroupType enum
+	FavoriteGroupType string `json:"favoriteGroupType"`
+	FavoriteGroupName string `json:"favoriteGroupName"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId            UserId `json:"userId"`
+}
+
+func (c *Client) UpdateFavoriteGroup(params UpdateFavoriteGroupParams, body UpdateFavoriteGroupRequest) error {
+	path := "/favorite/group/{favoriteGroupType}/{favoriteGroupName}/{userId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{favoriteGroupType}", fmt.Sprintf("%v", params.FavoriteGroupType))
+	path = strings.ReplaceAll(path, "{favoriteGroupName}", fmt.Sprintf("%v", params.FavoriteGroupName))
+	path = strings.ReplaceAll(path, "{userId}", fmt.Sprintf("%v", params.UserId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set request body
+	req.SetBody(body)
+
+	// Send request
+	resp, err := req.Put(path)
+	if err != nil {
+		return fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return nil
 }
 
 func (c *Client) GetFavoriteLimits() (*FavoriteLimitsResponse, error) {
@@ -3835,9 +4477,16 @@ func (c *Client) UpdateGroupRole(params UpdateGroupRoleParams, body UpdateGroupR
 type GetInventoryParams struct {
 	N      int64 `json:"n"`
 	Offset int64 `json:"offset"`
-	// InventorySortOrder enum
-	InventorySortOrder string            `json:"inventorySortOrder"`
-	InventoryItemType  InventoryItemType `json:"inventoryItemType"`
+	// Order enum
+	Order string `json:"order"` // Tags Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
+	//
+	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
+	Tags     Tag               `json:"tags"`
+	Types    InventoryItemType `json:"types"`
+	Flags    InventoryFlag     `json:"flags"`
+	NotTypes InventoryItemType `json:"notTypes"`
+	NotFlags InventoryFlag     `json:"notFlags"`
+	Archived bool              `json:"archived"`
 }
 
 func (c *Client) GetInventory(params GetInventoryParams) (*InventoryResponse, error) {
@@ -3850,11 +4499,26 @@ func (c *Client) GetInventory(params GetInventoryParams) (*InventoryResponse, er
 	if lo.IsNotEmpty(params.Offset) {
 		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
 	}
-	if lo.IsNotEmpty(params.InventorySortOrder) {
-		queryParams["inventorySortOrder"] = fmt.Sprintf("%v", params.InventorySortOrder)
+	if lo.IsNotEmpty(params.Order) {
+		queryParams["order"] = fmt.Sprintf("%v", params.Order)
 	}
-	if lo.IsNotEmpty(params.InventoryItemType) {
-		queryParams["inventoryItemType"] = fmt.Sprintf("%v", params.InventoryItemType)
+	if lo.IsNotEmpty(params.Tags) {
+		queryParams["tags"] = fmt.Sprintf("%v", params.Tags)
+	}
+	if lo.IsNotEmpty(params.Types) {
+		queryParams["types"] = fmt.Sprintf("%v", params.Types)
+	}
+	if lo.IsNotEmpty(params.Flags) {
+		queryParams["flags"] = fmt.Sprintf("%v", params.Flags)
+	}
+	if lo.IsNotEmpty(params.NotTypes) {
+		queryParams["notTypes"] = fmt.Sprintf("%v", params.NotTypes)
+	}
+	if lo.IsNotEmpty(params.NotFlags) {
+		queryParams["notFlags"] = fmt.Sprintf("%v", params.NotFlags)
+	}
+	if lo.IsNotEmpty(params.Archived) {
+		queryParams["archived"] = fmt.Sprintf("%v", params.Archived)
 	}
 
 	// Create request
@@ -3899,6 +4563,40 @@ func (c *Client) GetOwnInventoryItem(params GetOwnInventoryItemParams) (*Invento
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// UpdateOwnInventoryItemParams represents the parameters for the UpdateOwnInventoryItem request
+type UpdateOwnInventoryItemParams struct {
+	InventoryItemId string `json:"inventoryItemId"`
+}
+
+func (c *Client) UpdateOwnInventoryItem(params UpdateOwnInventoryItemParams, body UpdateInventoryItemRequest) (*InventoryItemResponse, error) {
+	path := "/inventory/{inventoryItemId}"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	path = strings.ReplaceAll(path, "{inventoryItemId}", fmt.Sprintf("%v", params.InventoryItemId))
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result InventoryItemResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Put(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -3999,6 +4697,84 @@ func (c *Client) SpawnInventoryItem(params SpawnInventoryItemParams) (*Inventory
 
 	// Send request
 	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// ShareInventoryItemPedestalParams represents the parameters for the ShareInventoryItemPedestal request
+type ShareInventoryItemPedestalParams struct {
+	ItemId   InventoryItemId `json:"itemId"`
+	Duration int64           `json:"duration"`
+}
+
+func (c *Client) ShareInventoryItemPedestal(params ShareInventoryItemPedestalParams) (*InventorySpawnResponse, error) {
+	path := "/inventory/cloning/pedestal"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.ItemId) {
+		queryParams["itemId"] = fmt.Sprintf("%v", params.ItemId)
+	}
+	if lo.IsNotEmpty(params.Duration) {
+		queryParams["duration"] = fmt.Sprintf("%v", params.Duration)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result InventorySpawnResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// ShareInventoryItemDirectParams represents the parameters for the ShareInventoryItemDirect request
+type ShareInventoryItemDirectParams struct {
+	ItemId   InventoryItemId `json:"itemId"`
+	Duration int64           `json:"duration"`
+}
+
+func (c *Client) ShareInventoryItemDirect(params ShareInventoryItemDirectParams, body ShareInventoryItemDirectRequest) (*InventoryShareResponse, error) {
+	path := "/inventory/cloning/direct"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.ItemId) {
+		queryParams["itemId"] = fmt.Sprintf("%v", params.ItemId)
+	}
+	if lo.IsNotEmpty(params.Duration) {
+		queryParams["duration"] = fmt.Sprintf("%v", params.Duration)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result InventoryShareResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -4399,6 +5175,44 @@ func (c *Client) CreateInstance(body CreateInstanceRequest) (*InstanceResponse, 
 
 	// Send request
 	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
+// GetRecentLocationsParams represents the parameters for the GetRecentLocations request
+type GetRecentLocationsParams struct {
+	N      int64 `json:"n"`
+	Offset int64 `json:"offset"`
+}
+
+func (c *Client) GetRecentLocations(params GetRecentLocationsParams) (*LocationIdListResponse, error) {
+	path := "/instances/recent"
+	// Replace path parameters and prepare query parameters
+	queryParams := make(map[string]string)
+	if lo.IsNotEmpty(params.N) {
+		queryParams["n"] = fmt.Sprintf("%v", params.N)
+	}
+	if lo.IsNotEmpty(params.Offset) {
+		queryParams["offset"] = fmt.Sprintf("%v", params.Offset)
+	}
+
+	// Create request
+	req := c.client.R()
+	// Set query parameters
+	req.SetQueryParams(queryParams)
+	// Set response object
+	var result LocationIdListResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Get(path)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
@@ -5631,25 +6445,45 @@ func (c *Client) DeleteUserPersistence(params DeleteUserPersistenceParams) error
 	return nil
 }
 
+func (c *Client) CreateWorld(body CreateWorldRequest) (*WorldResponse, error) {
+	path := "/worlds"
+
+	// Create request
+	req := c.client.R()
+	// Set request body
+	req.SetBody(body)
+	// Set response object
+	var result WorldResponse
+	req.SetResult(&result)
+
+	// Send request
+	resp, err := req.Post(path)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	// Check for successful status code
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
+	}
+	return &result, nil
+}
+
 // SearchWorldsParams represents the parameters for the SearchWorlds request
 type SearchWorldsParams struct {
-	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
-	UserId   UserId      `json:"userId"`
-	N        int64       `json:"n"`
-	Order    OrderOption `json:"order"`
-	Offset   int64       `json:"offset"`
-	Search   string      `json:"search"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"` // Notag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Notag           Tag           `json:"notag"`
+	Featured        bool          `json:"featured"`
+	Sort            SortOption    `json:"sort"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	UserId          UserId        `json:"userId"`
+	N               int64         `json:"n"`
+	Order           OrderOption   `json:"order"`
+	Offset          int64         `json:"offset"`
+	Search          string        `json:"search"`
+	Tag             string        `json:"tag"`
+	Notag           string        `json:"notag"`
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
-	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`
+	MinUnityVersion string        `json:"minUnityVersion"`
+	Platform        string        `json:"platform"`
 	Fuzzy           bool          `json:"fuzzy"`
 }
 
@@ -5721,48 +6555,20 @@ func (c *Client) SearchWorlds(params SearchWorldsParams) (*LimitedWorldListRespo
 	return &result, nil
 }
 
-func (c *Client) CreateWorld(body CreateWorldRequest) (*WorldResponse, error) {
-	path := "/worlds"
-
-	// Create request
-	req := c.client.R()
-	// Set request body
-	req.SetBody(body)
-	// Set response object
-	var result WorldResponse
-	req.SetResult(&result)
-
-	// Send request
-	resp, err := req.Post(path)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
-	}
-
-	// Check for successful status code
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode(), resp.String())
-	}
-	return &result, nil
-}
-
 // GetActiveWorldsParams represents the parameters for the GetActiveWorlds request
 type GetActiveWorldsParams struct {
-	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"`
-	N        int64       `json:"n"`
-	Order    OrderOption `json:"order"`
-	Offset   int64       `json:"offset"`
-	Search   string      `json:"search"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"` // Notag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Notag           Tag           `json:"notag"`
+	Featured        bool          `json:"featured"`
+	Sort            SortOption    `json:"sort"`
+	N               int64         `json:"n"`
+	Order           OrderOption   `json:"order"`
+	Offset          int64         `json:"offset"`
+	Search          string        `json:"search"`
+	Tag             string        `json:"tag"`
+	Notag           string        `json:"notag"`
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
-	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`
+	MinUnityVersion string        `json:"minUnityVersion"`
+	Platform        string        `json:"platform"`
 }
 
 func (c *Client) GetActiveWorlds(params GetActiveWorldsParams) (*LimitedWorldListResponse, error) {
@@ -5829,22 +6635,18 @@ func (c *Client) GetActiveWorlds(params GetActiveWorldsParams) (*LimitedWorldLis
 
 // GetFavoritedWorldsParams represents the parameters for the GetFavoritedWorlds request
 type GetFavoritedWorldsParams struct {
-	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"`
-	N        int64       `json:"n"`
-	Order    OrderOption `json:"order"`
-	Offset   int64       `json:"offset"`
-	Search   string      `json:"search"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"` // Notag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Notag           Tag           `json:"notag"`
+	Featured        bool          `json:"featured"`
+	Sort            SortOption    `json:"sort"`
+	N               int64         `json:"n"`
+	Order           OrderOption   `json:"order"`
+	Offset          int64         `json:"offset"`
+	Search          string        `json:"search"`
+	Tag             string        `json:"tag"`
+	Notag           string        `json:"notag"`
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
-	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`        // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	MinUnityVersion string        `json:"minUnityVersion"`
+	Platform        string        `json:"platform"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	UserId          UserId        `json:"userId"`
 }
 
@@ -5915,22 +6717,18 @@ func (c *Client) GetFavoritedWorlds(params GetFavoritedWorldsParams) (*Favorited
 
 // GetRecentWorldsParams represents the parameters for the GetRecentWorlds request
 type GetRecentWorldsParams struct {
-	Featured bool        `json:"featured"`
-	Sort     SortOption  `json:"sort"`
-	N        int64       `json:"n"`
-	Order    OrderOption `json:"order"`
-	Offset   int64       `json:"offset"`
-	Search   string      `json:"search"` // Tag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Tag Tag `json:"tag"` // Notag Tags are a way to grant various access, assign restrictions or other kinds of metadata to various to objects such as worlds, users and avatars.
-	//
-	// System tags starting with `system_` are granted automatically by the system, while admin tags with `admin_` are granted manually. More prefixes such as `language_ ` (to indicate that a player can speak the tagged language), and `author_tag_` (provided by a world author for search and sorting) exist as well.
-	Notag           Tag           `json:"notag"`
+	Featured        bool          `json:"featured"`
+	Sort            SortOption    `json:"sort"`
+	N               int64         `json:"n"`
+	Order           OrderOption   `json:"order"`
+	Offset          int64         `json:"offset"`
+	Search          string        `json:"search"`
+	Tag             string        `json:"tag"`
+	Notag           string        `json:"notag"`
 	ReleaseStatus   ReleaseStatus `json:"releaseStatus"`
 	MaxUnityVersion string        `json:"maxUnityVersion"`
-	MinUnityVersion string        `json:"minUnityVersion"` // Platform This can be `standalonewindows` or `android`, but can also pretty much be any random Unity verison such as `2019.2.4-801-Release` or `2019.2.2-772-Release` or even `unknownplatform`.
-	Platform        Platform      `json:"platform"`        // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
+	MinUnityVersion string        `json:"minUnityVersion"`
+	Platform        string        `json:"platform"` // UserId A users unique ID, usually in the form of `usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469`. Legacy players can have old IDs in the form of `8JoV9XEdpo`. The ID can never be changed.
 	UserId          UserId        `json:"userId"`
 }
 
